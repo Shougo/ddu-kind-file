@@ -5,6 +5,7 @@ import {
 } from "https://deno.land/x/ddu_vim@v0.1.0/types.ts#^";
 import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.1.0/deps.ts";
 import { ActionArguments } from "https://deno.land/x/ddu_vim@v0.1.0/base/kind.ts";
+import { dirname } from "https://deno.land/std@0.123.0/path/mod.ts";
 
 export type ActionData = {
   path?: string;
@@ -37,6 +38,17 @@ export class Kind extends BaseKind<Params> {
         if (action.col != null) {
           await fn.cursor(args.denops, 0, action.col);
         }
+      }
+
+      return Promise.resolve(ActionFlags.None);
+    },
+    cd: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+
+        const path = action.path == null ? item.word : action.path;
+        const dir = (await Deno.stat(path)).isDirectory ? path : dirname(path);
+        await args.denops.call("chdir", dir);
       }
 
       return Promise.resolve(ActionFlags.None);

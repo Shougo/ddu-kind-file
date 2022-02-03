@@ -38,6 +38,10 @@ ACTIONS						*ddu-kind-file-actions*
 open
 		Open the files.
 
+						*ddu-kind-file-action-cd*
+cd
+		call |chdir()| the directory.
+
 ==============================================================================
 PARAMS						*ddu-kind-file-params*
 
