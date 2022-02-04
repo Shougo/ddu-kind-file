@@ -30,6 +30,14 @@ https://github.com/vim-denops/denops.vim
 ==============================================================================
 EXAMPLES					*ddu-kind-file-examples*
 >
+	call ddu#custom#patch_global({
+	    \   'kindOptions': {
+	    \     'file': {
+	    \       'defaultAction': 'open',
+	    \     },
+	    \   }
+	    \ })
+<
 
 ==============================================================================
 ACTIONS						*ddu-kind-file-actions*

@@ -17,4 +17,11 @@ https://github.com/Shougo/ddu.vim
 ## Configuration
 
 ```vim
+call ddu#custom#patch_global({
+    \   'kindOptions': {
+    \     'file': {
+    \       'defaultAction': 'open',
+    \     },
+    \   }
+    \ })
 ```
