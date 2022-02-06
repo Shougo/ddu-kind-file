@@ -1,10 +1,10 @@
 import {
+  ActionArguments,
   ActionFlags,
   BaseKind,
   DduItem,
 } from "https://deno.land/x/ddu_vim@v0.7.1/types.ts#^";
 import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.7.1/deps.ts";
-import { ActionArguments } from "https://deno.land/x/ddu_vim@v0.7.1/base/kind.ts";
 import { dirname } from "https://deno.land/std@0.125.0/path/mod.ts";
 
 export type ActionData = {
