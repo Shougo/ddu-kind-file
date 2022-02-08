@@ -16,12 +16,23 @@ export type ActionData = {
 
 type Params = Record<never, never>;
 
+type OpenParams = {
+  command: string,
+};
+
 export class Kind extends BaseKind<Params> {
   actions: Record<
     string,
     (args: ActionArguments<Params>) => Promise<ActionFlags>
   > = {
-    open: async (args: { denops: Denops; items: DduItem[] }) => {
+    open: async (args: {
+      denops: Denops;
+      actionParams: unknown;
+      items: DduItem[];
+    }) => {
+      const params = args.actionParams as OpenParams;
+      const openCommand = params.command ? params.command : "edit";
+
       for (const item of args.items) {
         const action = item?.action as ActionData;
 
@@ -29,7 +40,13 @@ export class Kind extends BaseKind<Params> {
           await args.denops.cmd(`buffer ${action.bufNr}`);
         } else {
           const path = action.path == null ? item.word : action.path;
-          await args.denops.call("ddu#util#execute_path", "edit", path);
+          if (new RegExp("^https?://").test(path)) {
+            // URL
+            await args.denops.call("ddu#util#open", path);
+            continue;
+          }
+          await args.denops.call(
+            "ddu#util#execute_path", openCommand, path);
         }
 
         if (action.lineNr != null) {

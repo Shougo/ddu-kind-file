@@ -46,6 +46,10 @@ ACTIONS						*ddu-kind-file-actions*
 open
 		Open the files.
 
+		params:
+			{command}:	open command.
+					(Default: "edit")
+
 						*ddu-kind-file-action-cd*
 cd
 		call |chdir()| the directory.
