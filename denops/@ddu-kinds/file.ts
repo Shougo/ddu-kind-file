@@ -3,21 +3,30 @@ import {
   ActionFlags,
   BaseKind,
   DduItem,
-} from "https://deno.land/x/ddu_vim@v0.7.1/types.ts#^";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.7.1/deps.ts";
+} from "https://deno.land/x/ddu_vim@v0.10.0/types.ts#^";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.10.0/deps.ts";
 import { dirname } from "https://deno.land/std@0.125.0/path/mod.ts";
 
 export type ActionData = {
-  path?: string;
   bufNr?: number;
-  lineNr?: number;
   col?: number;
+  lineNr?: number;
+  path?: string;
+  text?: string;
 };
 
 type Params = Record<never, never>;
 
 type OpenParams = {
   command: string,
+};
+
+type QuickFix = {
+  lnum: number;
+  text: string;
+  col?: number;
+  bufnr?: number;
+  filename?: string;
 };
 
 export class Kind extends BaseKind<Params> {
@@ -39,7 +48,7 @@ export class Kind extends BaseKind<Params> {
         if (action.bufNr != null) {
           await args.denops.cmd(`buffer ${action.bufNr}`);
         } else {
-          const path = action.path == null ? item.word : action.path;
+          const path = action.path ?? item.word;
           if (new RegExp("^https?://").test(path)) {
             // URL
             await args.denops.call("ddu#util#open", path);
@@ -63,9 +72,47 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         const action = item?.action as ActionData;
 
-        const path = action.path == null ? item.word : action.path;
+        const path = action.path ?? item.word;
         const dir = (await Deno.stat(path)).isDirectory ? path : dirname(path);
         await args.denops.call("chdir", dir);
+      }
+
+      return Promise.resolve(ActionFlags.None);
+    },
+    quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
+      let qfloclist: QuickFix[] = [];
+
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+
+        if (!action.lineNr) {
+          continue;
+        }
+
+        let qfloc = {
+            lnum: action.lineNr,
+            text: item.word,
+        } as QuickFix;
+
+        if (action.col) {
+          qfloc.col = action.col;
+        }
+        if (action.bufNr) {
+          qfloc.bufnr = action.bufNr;
+        }
+        if (action.path) {
+          qfloc.filename = action.path;
+        }
+        if (action.text) {
+          qfloc.text = action.text;
+        }
+
+        qfloclist.push(qfloc);
+      }
+
+      if (qfloclist.length != 0) {
+        await fn.setqflist(args.denops, qfloclist, ' ');
+        await args.denops.cmd('copen')
       }
 
       return Promise.resolve(ActionFlags.None);
