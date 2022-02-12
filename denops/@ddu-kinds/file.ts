@@ -1,10 +1,10 @@
 import {
-  ActionArguments,
+  Actions,
   ActionFlags,
   BaseKind,
   DduItem,
-} from "https://deno.land/x/ddu_vim@v0.10.0/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.10.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v0.12.0/types.ts";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.12.0/deps.ts";
 import { dirname } from "https://deno.land/std@0.125.0/path/mod.ts";
 
 export type ActionData = {
@@ -30,10 +30,7 @@ type QuickFix = {
 };
 
 export class Kind extends BaseKind<Params> {
-  actions: Record<
-    string,
-    (args: ActionArguments<Params>) => Promise<ActionFlags>
-  > = {
+  actions: Actions<Params> = {
     open: async (args: {
       denops: Denops;
       actionParams: unknown;
