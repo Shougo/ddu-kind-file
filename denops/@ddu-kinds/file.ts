@@ -61,6 +61,9 @@ export class Kind extends BaseKind<Params> {
         if (action.col != null) {
           await fn.cursor(args.denops, 0, action.col);
         }
+
+        // Note: Open folds and centering
+        await args.denops.cmd("normal! zvzz")
       }
 
       return Promise.resolve(ActionFlags.None);
