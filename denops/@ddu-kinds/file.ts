@@ -4,7 +4,7 @@ import {
   BaseKind,
   DduItem,
 } from "https://deno.land/x/ddu_vim@v0.12.0/types.ts";
-import { Denops, fn } from "https://deno.land/x/ddu_vim@v0.12.0/deps.ts";
+import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v0.12.0/deps.ts";
 import { dirname } from "https://deno.land/std@0.125.0/path/mod.ts";
 
 export type ActionData = {
@@ -74,7 +74,9 @@ export class Kind extends BaseKind<Params> {
 
         const path = action.path ?? item.word;
         const dir = (await Deno.stat(path)).isDirectory ? path : dirname(path);
-        await args.denops.call("chdir", dir);
+        const filetype = await op.filetype.getLocal(args.denops);
+        await args.denops.call(
+          filetype == "deol" ? "deol#cd" : "chdir", dir);
       }
 
       return Promise.resolve(ActionFlags.None);
