@@ -78,8 +78,11 @@ export class Kind extends BaseKind<Params> {
         const path = action.path ?? item.word;
         const dir = (await Deno.stat(path)).isDirectory ? path : dirname(path);
         const filetype = await op.filetype.getLocal(args.denops);
-        await args.denops.call(
-          filetype == "deol" ? "deol#cd" : "chdir", dir);
+
+        if ((await Deno.stat(dir)).isDirectory) {
+          await args.denops.call(
+            filetype == "deol" ? "deol#cd" : "chdir", dir);
+        }
       }
 
       return Promise.resolve(ActionFlags.None);
