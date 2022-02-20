@@ -1,25 +1,25 @@
-*ddu-kind-word.txt*	word kind for ddu.vim
+*ddu-kind-file.txt*	File kind for ddu.vim
 
 Author: Shougo <Shougo.Matsu at gmail.com>
 License: MIT license
 
-CONTENTS					*ddu-kind-word-contents*
+CONTENTS					*ddu-kind-file-contents*
 
-Introduction		|ddu-kind-word-introduction|
-Install			|ddu-kind-word-install|
-Examples		|ddu-kind-word-examples|
-Actions			|ddu-kind-word-actions|
-Params			|ddu-kind-word-params|
-
-
-==============================================================================
-INTRODUCTION					*ddu-kind-word-introduction*
-
-This kind implements word operations.
+Introduction		|ddu-kind-file-introduction|
+Install			|ddu-kind-file-install|
+Examples		|ddu-kind-file-examples|
+Actions			|ddu-kind-file-actions|
+Params			|ddu-kind-file-params|
 
 
 ==============================================================================
-INSTALL						*ddu-kind-word-install*
+INTRODUCTION					*ddu-kind-file-introduction*
+
+This kind implements file operations.
+
+
+==============================================================================
+INSTALL						*ddu-kind-file-install*
 
 Please install both "ddu.vim" and "denops.vim".
 
@@ -28,26 +28,38 @@ https://github.com/vim-denops/denops.vim
 
 
 ==============================================================================
-EXAMPLES					*ddu-kind-word-examples*
+EXAMPLES					*ddu-kind-file-examples*
 >
 	call ddu#custom#patch_global({
 	    \   'kindOptions': {
-	    \     'word': {
-	    \       'defaultAction': 'append',
+	    \     'file': {
+	    \       'defaultAction': 'open',
 	    \     },
 	    \   }
 	    \ })
 <
 
 ==============================================================================
-ACTIONS						*ddu-kind-word-actions*
+ACTIONS						*ddu-kind-file-actions*
 
-						*ddu-kind-word-action-append*
-append
-		Paste the words like |p|.
+						*ddu-kind-file-action-cd*
+cd
+		call |chdir()| the directory.
+
+						*ddu-kind-file-action-open*
+open
+		Open the files.
+
+		params:
+			{command}:	open command.
+					(Default: "edit")
+
+					*ddu-kind-file-action-quickfix*
+quickfix
+		Set the quickfix list and open the quickfix window.
 
 ==============================================================================
-PARAMS						*ddu-kind-word-params*
+PARAMS						*ddu-kind-file-params*
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:noet:fen:noet:
