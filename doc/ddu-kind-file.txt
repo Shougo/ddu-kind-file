@@ -44,7 +44,11 @@ ACTIONS						*ddu-kind-file-actions*
 
 						*ddu-kind-file-action-cd*
 cd
-		call |chdir()| the directory.
+		Call |chdir()| the directory.
+
+						*ddu-kind-file-action-narrow*
+narrow
+		Change |ddu-source-option-path| to the directory.
 
 						*ddu-kind-file-action-open*
 open

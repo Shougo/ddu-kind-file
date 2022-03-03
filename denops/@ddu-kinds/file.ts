@@ -3,6 +3,7 @@ import {
   Actions,
   BaseKind,
   DduItem,
+  SourceOptions,
 } from "https://deno.land/x/ddu_vim@v1.2.0/types.ts";
 import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v1.2.0/deps.ts";
 import { dirname } from "https://deno.land/std@0.127.0/path/mod.ts";
@@ -31,6 +32,33 @@ type QuickFix = {
 
 export class Kind extends BaseKind<Params> {
   actions: Actions<Params> = {
+    cd: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        const dir = await getDirectory(item);
+        if (dir != "") {
+          const filetype = await op.filetype.getLocal(args.denops);
+          await args.denops.call(
+            filetype == "deol" ? "deol#cd" : "chdir",
+            dir,
+          );
+        }
+      }
+
+      return Promise.resolve(ActionFlags.None);
+    },
+    narrow: async (
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    ) => {
+      for (const item of args.items) {
+        const dir = await getDirectory(item);
+        if (dir != "") {
+          args.sourceOptions.path = dir;
+          return Promise.resolve(ActionFlags.RefreshItems);
+        }
+      }
+
+      return Promise.resolve(ActionFlags.None);
+    },
     open: async (args: {
       denops: Denops;
       actionParams: unknown;
@@ -70,31 +98,6 @@ export class Kind extends BaseKind<Params> {
 
         // Note: Open folds and centering
         await args.denops.cmd("normal! zvzz");
-      }
-
-      return Promise.resolve(ActionFlags.None);
-    },
-    cd: async (args: { denops: Denops; items: DduItem[] }) => {
-      for (const item of args.items) {
-        const action = item?.action as ActionData;
-
-        // Note: Deno.stat() may be failed
-        try {
-          const path = action.path ?? item.word;
-          const dir = (await Deno.stat(path)).isDirectory
-            ? path
-            : dirname(path);
-          const filetype = await op.filetype.getLocal(args.denops);
-
-          if ((await Deno.stat(dir)).isDirectory) {
-            await args.denops.call(
-              filetype == "deol" ? "deol#cd" : "chdir",
-              dir,
-            );
-          }
-        } catch (_e: unknown) {
-          // Ignore
-        }
       }
 
       return Promise.resolve(ActionFlags.None);
@@ -143,3 +146,20 @@ export class Kind extends BaseKind<Params> {
     return {};
   }
 }
+
+const getDirectory = async (item: DduItem) => {
+  const action = item?.action as ActionData;
+
+  // Note: Deno.stat() may be failed
+  try {
+    const path = action.path ?? item.word;
+    const dir = (await Deno.stat(path)).isDirectory ? path : dirname(path);
+    if ((await Deno.stat(dir)).isDirectory) {
+      return dir;
+    }
+  } catch (_e: unknown) {
+    // Ignore
+  }
+
+  return "";
+};
