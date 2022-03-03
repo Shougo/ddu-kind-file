@@ -1,11 +1,11 @@
 import {
-  Actions,
   ActionFlags,
+  Actions,
   BaseKind,
   DduItem,
-} from "https://deno.land/x/ddu_vim@v0.12.0/types.ts";
-import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v0.12.0/deps.ts";
-import { dirname } from "https://deno.land/std@0.125.0/path/mod.ts";
+} from "https://deno.land/x/ddu_vim@v1.2.0/types.ts";
+import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v1.2.0/deps.ts";
+import { dirname } from "https://deno.land/std@0.127.0/path/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -18,7 +18,7 @@ export type ActionData = {
 type Params = Record<never, never>;
 
 type OpenParams = {
-  command: string,
+  command: string;
 };
 
 type QuickFix = {
@@ -55,7 +55,10 @@ export class Kind extends BaseKind<Params> {
             continue;
           }
           await args.denops.call(
-            "ddu#util#execute_path", openCommand, path);
+            "ddu#util#execute_path",
+            openCommand,
+            path,
+          );
         }
 
         if (action.lineNr != null) {
@@ -66,7 +69,7 @@ export class Kind extends BaseKind<Params> {
         }
 
         // Note: Open folds and centering
-        await args.denops.cmd("normal! zvzz")
+        await args.denops.cmd("normal! zvzz");
       }
 
       return Promise.resolve(ActionFlags.None);
@@ -75,20 +78,29 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         const action = item?.action as ActionData;
 
-        const path = action.path ?? item.word;
-        const dir = (await Deno.stat(path)).isDirectory ? path : dirname(path);
-        const filetype = await op.filetype.getLocal(args.denops);
+        // Note: Deno.stat() may be failed
+        try {
+          const path = action.path ?? item.word;
+          const dir = (await Deno.stat(path)).isDirectory
+            ? path
+            : dirname(path);
+          const filetype = await op.filetype.getLocal(args.denops);
 
-        if ((await Deno.stat(dir)).isDirectory) {
-          await args.denops.call(
-            filetype == "deol" ? "deol#cd" : "chdir", dir);
+          if ((await Deno.stat(dir)).isDirectory) {
+            await args.denops.call(
+              filetype == "deol" ? "deol#cd" : "chdir",
+              dir,
+            );
+          }
+        } catch (_e: unknown) {
+          // Ignore
         }
       }
 
       return Promise.resolve(ActionFlags.None);
     },
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
-      let qfloclist: QuickFix[] = [];
+      const qfloclist: QuickFix[] = [];
 
       for (const item of args.items) {
         const action = item?.action as ActionData;
@@ -97,9 +109,9 @@ export class Kind extends BaseKind<Params> {
           continue;
         }
 
-        let qfloc = {
-            lnum: action.lineNr,
-            text: item.word,
+        const qfloc = {
+          lnum: action.lineNr,
+          text: item.word,
         } as QuickFix;
 
         if (action.col) {
@@ -119,8 +131,8 @@ export class Kind extends BaseKind<Params> {
       }
 
       if (qfloclist.length != 0) {
-        await fn.setqflist(args.denops, qfloclist, ' ');
-        await args.denops.cmd('copen')
+        await fn.setqflist(args.denops, qfloclist, " ");
+        await args.denops.cmd("copen");
       }
 
       return Promise.resolve(ActionFlags.None);
