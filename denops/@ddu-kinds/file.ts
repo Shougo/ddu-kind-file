@@ -11,6 +11,7 @@ import { dirname } from "https://deno.land/std@0.127.0/path/mod.ts";
 export type ActionData = {
   bufNr?: number;
   col?: number;
+  isDirectory?: boolean;
   lineNr?: number;
   path?: string;
   text?: string;
@@ -153,7 +154,9 @@ const getDirectory = async (item: DduItem) => {
   // Note: Deno.stat() may be failed
   try {
     const path = action.path ?? item.word;
-    const dir = (await Deno.stat(path)).isDirectory ? path : dirname(path);
+    const dir = (action.isDirectory ?? (await Deno.stat(path)).isDirectory)
+      ? path
+      : dirname(path);
     if ((await Deno.stat(dir)).isDirectory) {
       return dir;
     }
