@@ -117,7 +117,7 @@ export class Kind extends BaseKind<Params> {
       const qfloclist: QuickFix = buildQfLocList(args.items);
 
       if (qfloclist.length != 0) {
-        await fn.setloclist(args.denops, qfloclist, " ");
+        await fn.setqflist(args.denops, qfloclist, " ");
         await args.denops.cmd("copen");
       }
 
