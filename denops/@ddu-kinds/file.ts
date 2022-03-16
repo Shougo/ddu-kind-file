@@ -103,39 +103,21 @@ export class Kind extends BaseKind<Params> {
 
       return Promise.resolve(ActionFlags.None);
     },
-    quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
-      const qfloclist: QuickFix[] = [];
-
-      for (const item of args.items) {
-        const action = item?.action as ActionData;
-
-        if (!action.lineNr) {
-          continue;
-        }
-
-        const qfloc = {
-          lnum: action.lineNr,
-          text: item.word,
-        } as QuickFix;
-
-        if (action.col) {
-          qfloc.col = action.col;
-        }
-        if (action.bufNr) {
-          qfloc.bufnr = action.bufNr;
-        }
-        if (action.path) {
-          qfloc.filename = action.path;
-        }
-        if (action.text) {
-          qfloc.text = action.text;
-        }
-
-        qfloclist.push(qfloc);
-      }
+    loclist: async (args: { denops: Denops; items: DduItem[] }) => {
+      const qfloclist: QuickFix = buildQfLocList(args.items);
 
       if (qfloclist.length != 0) {
-        await fn.setqflist(args.denops, qfloclist, " ");
+        await fn.setloclist(args.denops, 0, qfloclist, " ");
+        await args.denops.cmd("lopen");
+      }
+
+      return Promise.resolve(ActionFlags.None);
+    },
+    quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
+      const qfloclist: QuickFix = buildQfLocList(args.items);
+
+      if (qfloclist.length != 0) {
+        await fn.setloclist(args.denops, qfloclist, " ");
         await args.denops.cmd("copen");
       }
 
@@ -146,6 +128,40 @@ export class Kind extends BaseKind<Params> {
   params(): Params {
     return {};
   }
+}
+
+const buildQfLocList = (items: DduItem[]) => {
+  const qfloclist: QuickFix[] = [];
+
+  for (const item of items) {
+    const action = item?.action as ActionData;
+
+    if (!action.lineNr) {
+      continue;
+    }
+
+    const qfloc = {
+      lnum: action.lineNr,
+      text: item.word,
+    } as QuickFix;
+
+    if (action.col) {
+      qfloc.col = action.col;
+    }
+    if (action.bufNr) {
+      qfloc.bufnr = action.bufNr;
+    }
+    if (action.path) {
+      qfloc.filename = action.path;
+    }
+    if (action.text) {
+      qfloc.text = action.text;
+    }
+
+    qfloclist.push(qfloc);
+  }
+
+  return qfloclist;
 }
 
 const getDirectory = async (item: DduItem) => {
