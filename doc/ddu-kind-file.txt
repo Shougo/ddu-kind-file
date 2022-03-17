@@ -46,6 +46,10 @@ ACTIONS						*ddu-kind-file-actions*
 cd
 		Call |chdir()| the directory.
 
+						*ddu-kind-file-action-loclist*
+loclist
+		Set the |location-list| and open the |location-list| window.
+
 						*ddu-kind-file-action-narrow*
 narrow
 		Change |ddu-source-option-path| to the directory.
@@ -58,9 +62,9 @@ open
 			{command}:	open command.
 					(Default: "edit")
 
-					*ddu-kind-file-action-quickfix*
+				    	*ddu-kind-file-action-quickfix*
 quickfix
-		Set the quickfix list and open the quickfix window.
+		Set the |quickfix| list and open the |quickfix| window.
 
 ==============================================================================
 PARAMS						*ddu-kind-file-params*
