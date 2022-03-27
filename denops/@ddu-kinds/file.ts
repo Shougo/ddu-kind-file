@@ -80,7 +80,7 @@ export class Kind extends BaseKind<Params> {
           const path = action.path ?? item.word;
           if (new RegExp("^https?://").test(path)) {
             // URL
-            await args.denops.call("ddu#util#open", path);
+            await args.denops.call("ddu#kind#file#open", path);
             continue;
           }
           await args.denops.call(
