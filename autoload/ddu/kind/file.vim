@@ -60,6 +60,18 @@ function! ddu#kind#file#open(filename) abort
   endif
 endfunction
 
+function! ddu#kind#file#cwd_input(cwd, prompt, text, completion) abort
+  let prev = getcwd()
+  try
+    call chdir(a:cwd)
+    return input(a:prompt, a:text, a:completion)
+  finally
+    call chdir(prev)
+  endtry
+
+  return ''
+endfunction
+
 function! s:check_wsl() abort
   if has('nvim')
     return has('wsl')

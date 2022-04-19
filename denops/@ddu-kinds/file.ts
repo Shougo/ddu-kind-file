@@ -4,9 +4,9 @@ import {
   BaseKind,
   DduItem,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.2.0/types.ts";
-import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v1.2.0/deps.ts";
-import { dirname } from "https://deno.land/std@0.127.0/path/mod.ts";
+} from "https://deno.land/x/ddu_vim@v1.5.0/types.ts";
+import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v1.5.0/deps.ts";
+import { dirname, isAbsolute, join } from "https://deno.land/std@0.135.0/path/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -60,6 +60,29 @@ export class Kind extends BaseKind<Params> {
 
       return Promise.resolve(ActionFlags.None);
     },
+    newDirectory: async (
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    ) => {
+      let cwd = args.sourceOptions.path;
+      for (const item of args.items) {
+        if (item.__expanded) {
+          cwd = await getDirectory(item);
+        }
+      }
+
+      if (cwd == "") {
+        return Promise.resolve(ActionFlags.None);
+      }
+
+      const input = await args.denops.call(
+        "ddu#kind#file#cwd_input", cwd,
+        "Please input a new directory name: ", "", "file") as string;
+      const newDirectory = isAbsolute(input) ? input : join(cwd, input);
+
+      await Deno.mkdir(newDirectory);
+
+      return Promise.resolve(ActionFlags.RefreshItems);
+    },
     open: async (args: {
       denops: Denops;
       actionParams: unknown;
@@ -104,7 +127,7 @@ export class Kind extends BaseKind<Params> {
       return Promise.resolve(ActionFlags.None);
     },
     loclist: async (args: { denops: Denops; items: DduItem[] }) => {
-      const qfloclist: QuickFix = buildQfLocList(args.items);
+      const qfloclist: QuickFix[] = buildQfLocList(args.items);
 
       if (qfloclist.length != 0) {
         await fn.setloclist(args.denops, 0, qfloclist, " ");
@@ -114,7 +137,7 @@ export class Kind extends BaseKind<Params> {
       return Promise.resolve(ActionFlags.None);
     },
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
-      const qfloclist: QuickFix = buildQfLocList(args.items);
+      const qfloclist: QuickFix[] = buildQfLocList(args.items);
 
       if (qfloclist.length != 0) {
         await fn.setqflist(args.denops, qfloclist, " ");

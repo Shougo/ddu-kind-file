@@ -54,6 +54,10 @@ loclist
 narrow
 		Change |ddu-source-option-path| to the directory.
 
+					*ddu-kind-file-action-newDirectory*
+newDirectory
+		Make new directory.
+
 						*ddu-kind-file-action-open*
 open
 		Open the files.
