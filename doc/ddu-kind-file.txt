@@ -58,6 +58,10 @@ narrow
 newDirectory
 		Make new directory.
 
+						*ddu-kind-file-action-newFile*
+newFile
+		Make new file.
+
 						*ddu-kind-file-action-open*
 open
 		Open the files.

@@ -71,15 +71,64 @@ export class Kind extends BaseKind<Params> {
       }
 
       if (cwd == "") {
-        return Promise.resolve(ActionFlags.None);
+        cwd = await fn.getcwd(args.denops) as string;
       }
 
       const input = await args.denops.call(
         "ddu#kind#file#cwd_input", cwd,
         "Please input a new directory name: ", "", "file") as string;
+      if (input == "") {
+        return Promise.resolve(ActionFlags.Persist);
+      }
+
       const newDirectory = isAbsolute(input) ? input : join(cwd, input);
 
+      try {
+        const stat = await Deno.stat(newDirectory);
+        if (stat.isDirectory || stat.isFile || stat.isSymlink) {
+          return Promise.resolve(ActionFlags.Persist);
+        }
+      } catch (e: unknown) {
+        // Ignore stat exception
+      }
+
       await Deno.mkdir(newDirectory);
+
+      return Promise.resolve(ActionFlags.RefreshItems);
+    },
+    newFile: async (
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    ) => {
+      let cwd = args.sourceOptions.path;
+      for (const item of args.items) {
+        if (item.__expanded) {
+          cwd = await getDirectory(item);
+        }
+      }
+
+      if (cwd == "") {
+        cwd = await fn.getcwd(args.denops) as string;
+      }
+
+      const input = await args.denops.call(
+        "ddu#kind#file#cwd_input", cwd,
+        "Please input a new file name: ", "", "file") as string;
+      if (input == "") {
+        return Promise.resolve(ActionFlags.Persist);
+      }
+
+      const newFile = isAbsolute(input) ? input : join(cwd, input);
+
+      try {
+        const stat = await Deno.stat(newFile);
+        if (stat.isDirectory || stat.isFile || stat.isSymlink) {
+          return Promise.resolve(ActionFlags.Persist);
+        }
+      } catch (e: unknown) {
+        // Ignore stat exception
+      }
+
+      await Deno.writeTextFile(newFile, "");
 
       return Promise.resolve(ActionFlags.RefreshItems);
     },
