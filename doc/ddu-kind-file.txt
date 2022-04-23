@@ -46,6 +46,10 @@ ACTIONS						*ddu-kind-file-actions*
 cd
 		Call |chdir()| the directory.
 
+						*ddu-kind-file-action-delete*
+delete
+		Delete the file or directory.
+
 						*ddu-kind-file-action-loclist*
 loclist
 		Set the |location-list| and open the |location-list| window.

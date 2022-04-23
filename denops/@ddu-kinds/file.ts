@@ -6,7 +6,11 @@ import {
   SourceOptions,
 } from "https://deno.land/x/ddu_vim@v1.5.0/types.ts";
 import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v1.5.0/deps.ts";
-import { dirname, isAbsolute, join } from "https://deno.land/std@0.135.0/path/mod.ts";
+import {
+  dirname,
+  isAbsolute,
+  join,
+} from "https://deno.land/std@0.135.0/path/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -47,6 +51,41 @@ export class Kind extends BaseKind<Params> {
 
       return Promise.resolve(ActionFlags.None);
     },
+    delete: async (
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    ) => {
+      const message = `Are you sure you want to delete ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }?`;
+
+      const confirm = await args.denops.call(
+        "ddu#kind#file#confirm",
+        message,
+        "&Yes\n&No\n&Cancel",
+        2
+      ) as number;
+      if (confirm != 1) {
+        return Promise.resolve(ActionFlags.Persist);
+      }
+
+      for (const item of args.items) {
+        await Deno.remove(getPath(item), { recursive: true });
+      }
+
+      return Promise.resolve(ActionFlags.RefreshItems);
+    },
+    loclist: async (args: { denops: Denops; items: DduItem[] }) => {
+      const qfloclist: QuickFix[] = buildQfLocList(args.items);
+
+      if (qfloclist.length != 0) {
+        await fn.setloclist(args.denops, 0, qfloclist, " ");
+        await args.denops.cmd("lopen");
+      }
+
+      return Promise.resolve(ActionFlags.None);
+    },
     narrow: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
     ) => {
@@ -75,8 +114,12 @@ export class Kind extends BaseKind<Params> {
       }
 
       const input = await args.denops.call(
-        "ddu#kind#file#cwd_input", cwd,
-        "Please input a new directory name: ", "", "file") as string;
+        "ddu#kind#file#cwd_input",
+        cwd,
+        "Please input a new directory name: ",
+        "",
+        "file",
+      ) as string;
       if (input == "") {
         return Promise.resolve(ActionFlags.Persist);
       }
@@ -111,8 +154,12 @@ export class Kind extends BaseKind<Params> {
       }
 
       const input = await args.denops.call(
-        "ddu#kind#file#cwd_input", cwd,
-        "Please input a new file name: ", "", "file") as string;
+        "ddu#kind#file#cwd_input",
+        cwd,
+        "Please input a new file name: ",
+        "",
+        "file",
+      ) as string;
       if (input == "") {
         return Promise.resolve(ActionFlags.Persist);
       }
@@ -175,16 +222,6 @@ export class Kind extends BaseKind<Params> {
 
       return Promise.resolve(ActionFlags.None);
     },
-    loclist: async (args: { denops: Denops; items: DduItem[] }) => {
-      const qfloclist: QuickFix[] = buildQfLocList(args.items);
-
-      if (qfloclist.length != 0) {
-        await fn.setloclist(args.denops, 0, qfloclist, " ");
-        await args.denops.cmd("lopen");
-      }
-
-      return Promise.resolve(ActionFlags.None);
-    },
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
 
@@ -234,7 +271,7 @@ const buildQfLocList = (items: DduItem[]) => {
   }
 
   return qfloclist;
-}
+};
 
 const getDirectory = async (item: DduItem) => {
   const action = item?.action as ActionData;
@@ -253,4 +290,9 @@ const getDirectory = async (item: DduItem) => {
   }
 
   return "";
+};
+
+const getPath = (item: DduItem) => {
+  const action = item?.action as ActionData;
+  return action.path ?? item.word;
 };
