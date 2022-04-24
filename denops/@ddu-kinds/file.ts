@@ -3,10 +3,15 @@ import {
   Actions,
   BaseKind,
   DduItem,
+  Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.5.0/types.ts";
-import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v1.5.0/deps.ts";
-import { dirname, isAbsolute, join } from "https://deno.land/std@0.135.0/path/mod.ts";
+} from "../../../ddu.vim/denops/ddu/types.ts";
+import {
+  dirname,
+  isAbsolute,
+  join,
+} from "https://deno.land/std@0.135.0/path/mod.ts";
+import { Denops, fn, op } from "../../../ddu.vim/denops/ddu/deps.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -75,8 +80,12 @@ export class Kind extends BaseKind<Params> {
       }
 
       const input = await args.denops.call(
-        "ddu#kind#file#cwd_input", cwd,
-        "Please input a new directory name: ", "", "file") as string;
+        "ddu#kind#file#cwd_input",
+        cwd,
+        "Please input a new directory name: ",
+        "",
+        "file",
+      ) as string;
       const newDirectory = isAbsolute(input) ? input : join(cwd, input);
 
       await Deno.mkdir(newDirectory);
@@ -148,6 +157,41 @@ export class Kind extends BaseKind<Params> {
     },
   };
 
+  getPreviewer(
+    denops: Denops,
+    item: DduItem,
+    actionParams: unknown,
+  ): Previewer {
+    const action = item.action as ActionData;
+    if (!action || !action.path) {
+      return;
+    }
+    const cmd = ["bat", "-n", action.path];
+    if (action.lineNr) {
+      const previewHeight = 100;
+      const startLine = Math.max(
+        0,
+        Math.ceil(action.lineNr - previewHeight / 2),
+      );
+      cmd.push(
+        "-r",
+        `${startLine}:${startLine + previewHeight - 3}`,
+        "--highlight-line",
+        String(action.lineNr),
+      );
+    }
+    return {
+      kind: "buffer",
+      path: action.bufNr === undefined ? action.path : undefined,
+      expr: action.bufNr,
+      lineNr: action.lineNr,
+    };
+    // return {
+    //   kind: "terminal",
+    //   cmds: cmd,
+    // };
+  }
+
   params(): Params {
     return {};
   }
@@ -185,7 +229,7 @@ const buildQfLocList = (items: DduItem[]) => {
   }
 
   return qfloclist;
-}
+};
 
 const getDirectory = async (item: DduItem) => {
   const action = item?.action as ActionData;
