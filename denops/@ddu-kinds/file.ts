@@ -10,6 +10,7 @@ import {
   dirname,
   isAbsolute,
   join,
+  resolve,
 } from "https://deno.land/std@0.135.0/path/mod.ts";
 
 export type ActionData = {
@@ -22,6 +23,10 @@ export type ActionData = {
 };
 
 type Params = Record<never, never>;
+
+type NarrowParams = {
+  path: string;
+};
 
 type OpenParams = {
   command: string;
@@ -64,7 +69,7 @@ export class Kind extends BaseKind<Params> {
         "ddu#kind#file#confirm",
         message,
         "&Yes\n&No\n&Cancel",
-        2
+        2,
       ) as number;
       if (confirm != 1) {
         return Promise.resolve(ActionFlags.Persist);
@@ -76,6 +81,17 @@ export class Kind extends BaseKind<Params> {
 
       return Promise.resolve(ActionFlags.RefreshItems);
     },
+    executeSystem: async (
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    ) => {
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+        await args.denops.call("ddu#kind#file#open", path);
+      }
+
+      return Promise.resolve(ActionFlags.Persist);
+    },
     loclist: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
 
@@ -86,9 +102,20 @@ export class Kind extends BaseKind<Params> {
 
       return Promise.resolve(ActionFlags.None);
     },
-    narrow: async (
-      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
-    ) => {
+    narrow: async (args: {
+      denops: Denops;
+      actionParams: unknown;
+      sourceOptions: SourceOptions;
+      items: DduItem[];
+    }) => {
+      const params = args.actionParams as NarrowParams;
+      if (params.path) {
+        args.sourceOptions.path = params.path == ".."
+          ? resolve(join(args.sourceOptions.path, ".."))
+          : params.path;
+        return Promise.resolve(ActionFlags.RefreshItems);
+      }
+
       for (const item of args.items) {
         const dir = await getDirectory(item);
         if (dir != "") {
@@ -185,7 +212,7 @@ export class Kind extends BaseKind<Params> {
       items: DduItem[];
     }) => {
       const params = args.actionParams as OpenParams;
-      const openCommand = params.command ? params.command : "edit";
+      const openCommand = params.command ?? "edit";
 
       for (const item of args.items) {
         const action = item?.action as ActionData;

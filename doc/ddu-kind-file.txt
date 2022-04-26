@@ -50,6 +50,10 @@ cd
 delete
 		Delete the file or directory.
 
+					*ddu-kind-file-action-executeSystem*
+executeSystem
+		Execute the file by system associated command.
+
 						*ddu-kind-file-action-loclist*
 loclist
 		Set the |location-list| and open the |location-list| window.
@@ -57,6 +61,12 @@ loclist
 						*ddu-kind-file-action-narrow*
 narrow
 		Change |ddu-source-option-path| to the directory.
+
+		params:
+			{path}:		narrowing path.
+					If it is "..", it means the parent
+					directory.
+					(Default: cursor/selected item's path)
 
 					*ddu-kind-file-action-newDirectory*
 newDirectory
