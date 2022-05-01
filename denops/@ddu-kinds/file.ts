@@ -11,7 +11,12 @@ import {
   isAbsolute,
   join,
 } from "https://deno.land/std@0.135.0/path/mod.ts";
-import { Denops, fn, op } from "../../../ddu.vim/denops/ddu/deps.ts";
+import {
+  Denops,
+  ensureObject,
+  fn,
+  op,
+} from "../../../ddu.vim/denops/ddu/deps.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -34,6 +39,10 @@ type QuickFix = {
   col?: number;
   bufnr?: number;
   filename?: string;
+};
+
+type PreviewOption = {
+  useBat?: boolean;
 };
 
 export class Kind extends BaseKind<Params> {
@@ -158,38 +167,41 @@ export class Kind extends BaseKind<Params> {
   };
 
   getPreviewer(
-    denops: Denops,
+    _denops: Denops,
     item: DduItem,
     actionParams: unknown,
-  ): Previewer {
+  ): Promise<Previewer | undefined> {
     const action = item.action as ActionData;
-    if (!action || !action.path) {
-      return;
+    if (!action) {
+      return Promise.resolve(undefined);
     }
-    const cmd = ["bat", "-n", action.path];
-    if (action.lineNr) {
-      const previewHeight = 100;
-      const startLine = Math.max(
-        0,
-        Math.ceil(action.lineNr - previewHeight / 2),
-      );
-      cmd.push(
-        "-r",
-        `${startLine}:${startLine + previewHeight - 3}`,
-        "--highlight-line",
-        String(action.lineNr),
-      );
+    const param = ensureObject(actionParams) as PreviewOption;
+    if (action.path && param.useBat) {
+      const cmd = ["bat", "-n", action.path];
+      if (action.lineNr) {
+        const previewHeight = 100;
+        const startLine = Math.max(
+          0,
+          Math.ceil(action.lineNr - previewHeight / 2),
+        );
+        cmd.push(
+          "-r",
+          `${startLine}:${startLine + previewHeight - 3}`,
+          "--highlight-line",
+          String(action.lineNr),
+        );
+      }
+      return Promise.resolve({
+        kind: "terminal",
+        cmds: cmd,
+      });
     }
-    return {
+    return Promise.resolve({
       kind: "buffer",
       path: action.bufNr === undefined ? action.path : undefined,
       expr: action.bufNr,
       lineNr: action.lineNr,
-    };
-    // return {
-    //   kind: "terminal",
-    //   cmds: cmd,
-    // };
+    });
   }
 
   params(): Params {
