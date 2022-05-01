@@ -46,6 +46,14 @@ ACTIONS						*ddu-kind-file-actions*
 cd
 		Call |chdir()| the directory.
 
+						*ddu-kind-file-action-delete*
+delete
+		Delete the file or directory.
+
+					*ddu-kind-file-action-executeSystem*
+executeSystem
+		Execute the file by system associated command.
+
 						*ddu-kind-file-action-loclist*
 loclist
 		Set the |location-list| and open the |location-list| window.
@@ -54,9 +62,19 @@ loclist
 narrow
 		Change |ddu-source-option-path| to the directory.
 
+		params:
+			{path}:		narrowing path.
+					If it is "..", it means the parent
+					directory.
+					(Default: cursor/selected item's path)
+
 					*ddu-kind-file-action-newDirectory*
 newDirectory
 		Make new directory.
+
+						*ddu-kind-file-action-newFile*
+newFile
+		Make new file.
 
 						*ddu-kind-file-action-open*
 open
