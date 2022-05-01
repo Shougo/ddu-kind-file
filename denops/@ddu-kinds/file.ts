@@ -3,6 +3,7 @@ import {
   Actions,
   BaseKind,
   DduItem,
+  PreviewContext,
   Previewer,
   SourceOptions,
 } from "../../../ddu.vim/denops/ddu/types.ts";
@@ -166,20 +167,21 @@ export class Kind extends BaseKind<Params> {
     },
   };
 
-  getPreviewer(
-    _denops: Denops,
-    item: DduItem,
-    actionParams: unknown,
-  ): Promise<Previewer | undefined> {
-    const action = item.action as ActionData;
+  getPreviewer(args: {
+    denops: Denops;
+    item: DduItem;
+    actionParams: unknown;
+    previewContext: PreviewContext;
+  }): Promise<Previewer | undefined> {
+    const action = args.item.action as ActionData;
     if (!action) {
       return Promise.resolve(undefined);
     }
-    const param = ensureObject(actionParams) as PreviewOption;
+    const param = ensureObject(args.actionParams) as PreviewOption;
     if (action.path && param.useBat) {
       const cmd = ["bat", "-n", action.path];
       if (action.lineNr) {
-        const previewHeight = 100;
+        const previewHeight = args.previewContext.height;
         const startLine = Math.max(
           0,
           Math.ceil(action.lineNr - previewHeight / 2),
