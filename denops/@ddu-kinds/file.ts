@@ -282,9 +282,13 @@ export class Kind extends BaseKind<Params> {
     if (!action) {
       return Promise.resolve(undefined);
     }
+
     const param = ensureObject(args.actionParams) as PreviewOption;
+
     if (action.path && param.useBat) {
+      // Use bat
       const cmd = ["bat", "-n", action.path];
+
       if (action.lineNr) {
         const previewHeight = args.previewContext.height;
         const startLine = Math.max(
@@ -298,11 +302,13 @@ export class Kind extends BaseKind<Params> {
           String(action.lineNr),
         );
       }
+
       return Promise.resolve({
         kind: "terminal",
         cmds: cmd,
       });
     }
+
     return Promise.resolve({
       kind: "buffer",
       path: action.bufNr === undefined ? action.path : undefined,
