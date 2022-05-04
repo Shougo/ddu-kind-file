@@ -6,19 +6,19 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "../../../ddu.vim/denops/ddu/types.ts";
+} from "https://deno.land/x/ddu_vim@v1.6.0/types.ts";
 import {
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.135.0/path/mod.ts";
+} from "https://deno.land/std@0.137.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
-} from "../../../ddu.vim/denops/ddu/deps.ts";
+} from "https://deno.land/x/ddu_vim@v1.6.0/deps.ts";
 
 export type ActionData = {
   bufNr?: number;
