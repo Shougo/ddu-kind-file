@@ -9,6 +9,7 @@ Introduction		|ddu-kind-file-introduction|
 Install			|ddu-kind-file-install|
 Examples		|ddu-kind-file-examples|
 Actions			|ddu-kind-file-actions|
+Preview params		|ddu-kind-file-preview-params|
 Params			|ddu-kind-file-params|
 
 
@@ -87,6 +88,16 @@ open
 				    	*ddu-kind-file-action-quickfix*
 quickfix
 		Set the |quickfix| list and open the |quickfix| window.
+
+==============================================================================
+PREVIEW PARAMS					*ddu-kind-file-preview-params*
+
+					*ddu-kind-file-preview-param-useBat*
+useBat
+		If it is true, file is previewed by "bat" command.
+
+		Note: "bat" command is required.
+		https://github.com/sharkdp/bat
 
 ==============================================================================
 PARAMS						*ddu-kind-file-params*

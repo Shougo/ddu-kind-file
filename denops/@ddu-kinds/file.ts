@@ -3,15 +3,22 @@ import {
   Actions,
   BaseKind,
   DduItem,
+  PreviewContext,
+  Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.5.0/types.ts";
-import { Denops, fn, op } from "https://deno.land/x/ddu_vim@v1.5.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v1.6.0/types.ts";
 import {
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.135.0/path/mod.ts";
+} from "https://deno.land/std@0.137.0/path/mod.ts";
+import {
+  Denops,
+  ensureObject,
+  fn,
+  op,
+} from "https://deno.land/x/ddu_vim@v1.6.0/deps.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -38,6 +45,10 @@ type QuickFix = {
   col?: number;
   bufnr?: number;
   filename?: string;
+};
+
+type PreviewOption = {
+  useBat?: boolean;
 };
 
 export class Kind extends BaseKind<Params> {
@@ -260,6 +271,45 @@ export class Kind extends BaseKind<Params> {
       return Promise.resolve(ActionFlags.None);
     },
   };
+
+  getPreviewer(args: {
+    denops: Denops;
+    item: DduItem;
+    actionParams: unknown;
+    previewContext: PreviewContext;
+  }): Promise<Previewer | undefined> {
+    const action = args.item.action as ActionData;
+    if (!action) {
+      return Promise.resolve(undefined);
+    }
+    const param = ensureObject(args.actionParams) as PreviewOption;
+    if (action.path && param.useBat) {
+      const cmd = ["bat", "-n", action.path];
+      if (action.lineNr) {
+        const previewHeight = args.previewContext.height;
+        const startLine = Math.max(
+          0,
+          Math.ceil(action.lineNr - previewHeight / 2),
+        );
+        cmd.push(
+          "-r",
+          `${startLine}:${startLine + previewHeight - 3}`,
+          "--highlight-line",
+          String(action.lineNr),
+        );
+      }
+      return Promise.resolve({
+        kind: "terminal",
+        cmds: cmd,
+      });
+    }
+    return Promise.resolve({
+      kind: "buffer",
+      path: action.bufNr === undefined ? action.path : undefined,
+      expr: action.bufNr,
+      lineNr: action.lineNr,
+    });
+  }
 
   params(): Params {
     return {};
