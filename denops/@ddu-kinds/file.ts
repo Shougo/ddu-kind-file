@@ -48,7 +48,7 @@ type QuickFix = {
 };
 
 type PreviewOption = {
-  useBat?: boolean;
+  previewCmds?: string[];
 };
 
 export class Kind extends BaseKind<Params> {
@@ -285,27 +285,57 @@ export class Kind extends BaseKind<Params> {
 
     const param = ensureObject(args.actionParams) as PreviewOption;
 
-    if (action.path && param.useBat) {
-      // Use bat
-      const cmd = ["bat", "-n", action.path];
-
+    if (action.path && param.previewCmds) {
+      const previewHeight = args.previewContext.height;
+      let startLine = 0;
+      let lineNr = 0;
       if (action.lineNr) {
-        const previewHeight = args.previewContext.height;
-        const startLine = Math.max(
+        lineNr = action.lineNr;
+        startLine = Math.max(
           0,
           Math.ceil(action.lineNr - previewHeight / 2),
         );
-        cmd.push(
-          "-r",
-          `${startLine}:${startLine + previewHeight - 3}`,
-          "--highlight-line",
-          String(action.lineNr),
-        );
+      }
+
+      const pairs: Record<string, string> = {
+        s: action.path,
+        l: String(lineNr),
+        h: String(previewHeight),
+        e: String(startLine + previewHeight),
+        b: String(startLine),
+        "%": "%",
+      };
+      const replacer = (
+        match: string,
+        p1: string,
+      ) => {
+        if (!p1.length || !(p1 in pairs)) {
+          throw `invalid item ${match}`;
+        }
+        return pairs[p1];
+      };
+      const replaced: string[] = [];
+      try {
+        for (const cmd of param.previewCmds) {
+          replaced.push(cmd.replace(/%(.?)/g, replacer));
+        }
+      } catch (e) {
+        return Promise.resolve({
+          kind: "nofile",
+          contents: ["Error", e.toString()],
+          highlights: [{
+            name: "ddu-kind-file-error",
+            "hl_group": "Error",
+            row: 1,
+            col: 1,
+            width: 5,
+          }],
+        });
       }
 
       return Promise.resolve({
         kind: "terminal",
-        cmds: cmd,
+        cmds: replaced,
       });
     }
 
