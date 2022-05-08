@@ -92,13 +92,27 @@ quickfix
 ==============================================================================
 PREVIEW PARAMS					*ddu-kind-file-preview-params*
 
-					*ddu-kind-file-preview-param-useBat*
-useBat
-		If it is true, file is previewed by "bat" command.
+				*ddu-kind-file-preview-param-previewCmds*
+previewCmds	(string[])
+		External commands to preview the file.
+		If it is not specified, normal buffer is used.
+		You can use the format like the following.
+		Symbol		Result ~
+		--------	------
+		%%		%
+		%s		Path to preview
+		%l		Line in file
+		%h		Height of preview window
+		%e		End line of preview
+		%b		Start line of preview
 
-		Note: "bat" command is required.
-		https://github.com/sharkdp/bat
-
+		Example:
+		"bat" (https://github.com/sharkdp/bat) preview >
+		['bat', '-n', '%s', '-r', '%b:%e', '--highlight-line', '%l']
+<
+		Preview with "less" >
+		['less', '+%b', '%s']
+<
 ==============================================================================
 PARAMS						*ddu-kind-file-params*
 
