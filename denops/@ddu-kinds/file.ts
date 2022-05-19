@@ -358,14 +358,17 @@ const buildQfLocList = (items: DduItem[]) => {
   for (const item of items) {
     const action = item?.action as ActionData;
 
-    if (!action.lineNr) {
-      continue;
-    }
-
     const qfloc = {
       lnum: action.lineNr,
       text: item.word,
     } as QuickFix;
+
+    if (!action.lineNr) {
+      qfloc.lnum = 0
+      qfloc.text = ""
+    } else if (action.text) {
+      qfloc.text = action.text;
+    }
 
     if (action.col) {
       qfloc.col = action.col;
@@ -375,9 +378,6 @@ const buildQfLocList = (items: DduItem[]) => {
     }
     if (action.path) {
       qfloc.filename = action.path;
-    }
-    if (action.text) {
-      qfloc.text = action.text;
     }
 
     qfloclist.push(qfloc);
