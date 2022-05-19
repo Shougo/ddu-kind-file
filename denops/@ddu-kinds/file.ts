@@ -6,19 +6,19 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.6.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v1.6.1/types.ts";
 import {
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.137.0/path/mod.ts";
+} from "https://deno.land/std@0.140.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
-} from "https://deno.land/x/ddu_vim@v1.6.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v1.6.1/deps.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -65,7 +65,7 @@ export class Kind extends BaseKind<Params> {
         }
       }
 
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
     },
     delete: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
@@ -83,14 +83,14 @@ export class Kind extends BaseKind<Params> {
         2,
       ) as number;
       if (confirm != 1) {
-        return Promise.resolve(ActionFlags.Persist);
+        return ActionFlags.Persist;
       }
 
       for (const item of args.items) {
         await Deno.remove(getPath(item), { recursive: true });
       }
 
-      return Promise.resolve(ActionFlags.RefreshItems);
+      return ActionFlags.RefreshItems;
     },
     executeSystem: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
@@ -101,7 +101,7 @@ export class Kind extends BaseKind<Params> {
         await args.denops.call("ddu#kind#file#open", path);
       }
 
-      return Promise.resolve(ActionFlags.Persist);
+      return ActionFlags.Persist;
     },
     loclist: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
@@ -111,7 +111,7 @@ export class Kind extends BaseKind<Params> {
         await args.denops.cmd("lopen");
       }
 
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
     },
     narrow: async (args: {
       denops: Denops;
@@ -124,18 +124,18 @@ export class Kind extends BaseKind<Params> {
         args.sourceOptions.path = params.path == ".."
           ? resolve(join(args.sourceOptions.path, ".."))
           : params.path;
-        return Promise.resolve(ActionFlags.RefreshItems);
+        return ActionFlags.RefreshItems;
       }
 
       for (const item of args.items) {
         const dir = await getDirectory(item);
         if (dir != "") {
           args.sourceOptions.path = dir;
-          return Promise.resolve(ActionFlags.RefreshItems);
+          return ActionFlags.RefreshItems;
         }
       }
 
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
     },
     newDirectory: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
@@ -159,7 +159,7 @@ export class Kind extends BaseKind<Params> {
         "file",
       ) as string;
       if (input == "") {
-        return Promise.resolve(ActionFlags.Persist);
+        return ActionFlags.Persist;
       }
 
       const newDirectory = isAbsolute(input) ? input : join(cwd, input);
@@ -167,15 +167,15 @@ export class Kind extends BaseKind<Params> {
       try {
         const stat = await Deno.stat(newDirectory);
         if (stat.isDirectory || stat.isFile || stat.isSymlink) {
-          return Promise.resolve(ActionFlags.Persist);
+          return ActionFlags.Persist;
         }
-      } catch (e: unknown) {
+      } catch (_: unknown) {
         // Ignore stat exception
       }
 
       await Deno.mkdir(newDirectory);
 
-      return Promise.resolve(ActionFlags.RefreshItems);
+      return ActionFlags.RefreshItems;
     },
     newFile: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
@@ -199,7 +199,7 @@ export class Kind extends BaseKind<Params> {
         "file",
       ) as string;
       if (input == "") {
-        return Promise.resolve(ActionFlags.Persist);
+        return ActionFlags.Persist;
       }
 
       const newFile = isAbsolute(input) ? input : join(cwd, input);
@@ -207,15 +207,15 @@ export class Kind extends BaseKind<Params> {
       try {
         const stat = await Deno.stat(newFile);
         if (stat.isDirectory || stat.isFile || stat.isSymlink) {
-          return Promise.resolve(ActionFlags.Persist);
+          return ActionFlags.Persist;
         }
-      } catch (e: unknown) {
+      } catch (_: unknown) {
         // Ignore stat exception
       }
 
       await Deno.writeTextFile(newFile, "");
 
-      return Promise.resolve(ActionFlags.RefreshItems);
+      return ActionFlags.RefreshItems;
     },
     open: async (args: {
       denops: Denops;
@@ -258,7 +258,7 @@ export class Kind extends BaseKind<Params> {
         await args.denops.cmd("normal! zvzz");
       }
 
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
     },
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
@@ -268,11 +268,12 @@ export class Kind extends BaseKind<Params> {
         await args.denops.cmd("copen");
       }
 
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
     },
   };
 
-  getPreviewer(args: {
+  // deno-lint-ignore require-await
+  async getPreviewer(args: {
     denops: Denops;
     item: DduItem;
     actionParams: unknown;
@@ -280,7 +281,7 @@ export class Kind extends BaseKind<Params> {
   }): Promise<Previewer | undefined> {
     const action = args.item.action as ActionData;
     if (!action) {
-      return Promise.resolve(undefined);
+      return undefined;
     }
 
     const param = ensureObject(args.actionParams) as PreviewOption;
@@ -320,7 +321,7 @@ export class Kind extends BaseKind<Params> {
           replaced.push(cmd.replace(/%(.?)/g, replacer));
         }
       } catch (e) {
-        return Promise.resolve({
+        return {
           kind: "nofile",
           contents: ["Error", e.toString()],
           highlights: [{
@@ -330,21 +331,21 @@ export class Kind extends BaseKind<Params> {
             col: 1,
             width: 5,
           }],
-        });
+        };
       }
 
-      return Promise.resolve({
+      return {
         kind: "terminal",
         cmds: replaced,
-      });
+      };
     }
 
-    return Promise.resolve({
+    return {
       kind: "buffer",
       path: action.bufNr === undefined ? action.path : undefined,
       expr: action.bufNr,
       lineNr: action.lineNr,
-    });
+    };
   }
 
   params(): Params {
@@ -358,15 +359,13 @@ const buildQfLocList = (items: DduItem[]) => {
   for (const item of items) {
     const action = item?.action as ActionData;
 
-    if (!action.lineNr) {
-      continue;
-    }
-
     const qfloc = {
-      lnum: action.lineNr,
       text: item.word,
     } as QuickFix;
 
+    if (action.lineNr) {
+      qfloc.lnum = action.lineNr;
+    }
     if (action.col) {
       qfloc.col = action.col;
     }
