@@ -18,6 +18,7 @@ import {
   ensureObject,
   fn,
   op,
+  vars,
 } from "https://deno.land/x/ddu_vim@v1.6.1/deps.ts";
 
 export type ActionData = {
@@ -269,6 +270,19 @@ export class Kind extends BaseKind<Params> {
       }
 
       return ActionFlags.None;
+    },
+    yank: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+
+        await fn.setreg(args.denops, '"', path, 'v');
+        await fn.setreg(args.denops,
+                        await vars.v.get(args.denops, "register"),
+                        path, 'v');
+      }
+
+      return ActionFlags.Persist;
     },
   };
 

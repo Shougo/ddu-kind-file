@@ -89,6 +89,10 @@ open
 quickfix
 		Set the |quickfix| list and open the |quickfix| window.
 
+				    	*ddu-kind-file-action-yank*
+yank
+		Yank the file path.
+
 ==============================================================================
 PREVIEW PARAMS					*ddu-kind-file-preview-params*
 
