@@ -331,8 +331,10 @@ export class Kind extends BaseKind<Params> {
           await move(path, join(cwd, basename(path)));
         }
       } else {
-        await args.denops.call("ddu#kind#file#print",
-                               `Invalid action: ${args.clipboard.action}`);
+        await args.denops.call(
+          "ddu#kind#file#print",
+          `Invalid action: ${args.clipboard.action}`,
+        );
         return ActionFlags.Persist;
       }
 
@@ -353,10 +355,13 @@ export class Kind extends BaseKind<Params> {
         const action = item?.action as ActionData;
         const path = action.path ?? item.word;
 
-        await fn.setreg(args.denops, '"', path, 'v');
-        await fn.setreg(args.denops,
-                        await vars.v.get(args.denops, "register"),
-                        path, 'v');
+        await fn.setreg(args.denops, '"', path, "v");
+        await fn.setreg(
+          args.denops,
+          await vars.v.get(args.denops, "register"),
+          path,
+          "v",
+        );
       }
 
       return ActionFlags.Persist;
@@ -389,8 +394,10 @@ export class Kind extends BaseKind<Params> {
         try {
           const stat = await Deno.stat(newPath);
           if (stat.isDirectory || stat.isFile || stat.isSymlink) {
-            await args.denops.call("ddu#kind#file#print",
-                                   `${newPath} already exists.`);
+            await args.denops.call(
+              "ddu#kind#file#print",
+              `${newPath} already exists.`,
+            );
             return ActionFlags.Persist;
           }
         } catch (_: unknown) {
