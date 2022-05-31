@@ -2,24 +2,27 @@ import {
   ActionFlags,
   Actions,
   BaseKind,
+  Clipboard,
   DduItem,
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.6.1/types.ts";
+} from "https://deno.land/x/ddu_vim@v1.7.0/types.ts";
 import {
+  basename,
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.140.0/path/mod.ts";
+} from "https://deno.land/std@0.141.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v1.6.1/deps.ts";
+} from "https://deno.land/x/ddu_vim@v1.7.0/deps.ts";
+import { copy, move } from "https://deno.land/std@0.141.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -68,6 +71,23 @@ export class Kind extends BaseKind<Params> {
 
       return ActionFlags.None;
     },
+    copy: async (
+      args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
+    ) => {
+      const message = `Copy to the clipboard: ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }`;
+
+      await args.denops.call("ddu#kind#file#print", message);
+
+      args.clipboard.action = "copy";
+      args.clipboard.items = args.items;
+      args.clipboard.mode = "";
+
+      return ActionFlags.RefreshItems;
+    },
     delete: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
     ) => {
@@ -113,6 +133,23 @@ export class Kind extends BaseKind<Params> {
       }
 
       return ActionFlags.None;
+    },
+    move: async (
+      args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
+    ) => {
+      const message = `Move to the clipboard: ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }`;
+
+      await args.denops.call("ddu#kind#file#print", message);
+
+      args.clipboard.action = "move";
+      args.clipboard.items = args.items;
+      args.clipboard.mode = "";
+
+      return ActionFlags.RefreshItems;
     },
     narrow: async (args: {
       denops: Denops;
@@ -260,6 +297,45 @@ export class Kind extends BaseKind<Params> {
       }
 
       return ActionFlags.None;
+    },
+    paste: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        clipboard: Clipboard;
+      },
+    ) => {
+      let cwd = args.sourceOptions.path;
+      for (const item of args.items) {
+        if (item.__expanded) {
+          cwd = await getDirectory(item);
+        }
+      }
+
+      if (cwd == "") {
+        cwd = await fn.getcwd(args.denops) as string;
+      }
+
+      if (args.clipboard.action == "copy") {
+        for (const item of args.clipboard.items) {
+          const action = item?.action as ActionData;
+          const path = action.path ?? item.word;
+          await copy(path, join(cwd, basename(path)));
+        }
+      } else if (args.clipboard.action == "move") {
+        for (const item of args.clipboard.items) {
+          const action = item?.action as ActionData;
+          const path = action.path ?? item.word;
+          await move(path, join(cwd, basename(path)));
+        }
+      } else {
+        await args.denops.call("ddu#kind#file#print",
+                               `Invalid action: ${args.clipboard.action}`);
+        return ActionFlags.Persist;
+      }
+
+      return ActionFlags.RefreshItems;
     },
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);

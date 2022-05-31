@@ -47,6 +47,10 @@ ACTIONS						*ddu-kind-file-actions*
 cd
 		Call |chdir()| the directory.
 
+						*ddu-kind-file-action-copy*
+copy
+		Copy the selected files to ddu clipboard.
+
 						*ddu-kind-file-action-delete*
 delete
 		Delete the file or directory.
@@ -58,6 +62,15 @@ executeSystem
 						*ddu-kind-file-action-loclist*
 loclist
 		Set the |location-list| and open the |location-list| window.
+
+						*ddu-kind-file-action-move*
+move
+		Move the selected files to ddu clipboard.
+
+paste						*ddu-kind-file-action-paste*
+		Fire the clipboard action in the current directory.
+		Note: It is used after |ddu-kind-file-action-copy| or
+		|ddu-kind-file-action-move|.
 
 						*ddu-kind-file-action-narrow*
 narrow

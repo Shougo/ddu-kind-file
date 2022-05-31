@@ -91,3 +91,9 @@ function! ddu#kind#file#confirm(msg, choices, default) abort
 
   return a:default
 endfunction
+
+function! ddu#kind#file#print(string, ...) abort
+  let name = a:0 ? a:1 : 'ddu-kind-file'
+  echomsg printf('[%s] %s', name,
+        \ type(a:string) ==# v:t_string ? a:string : string(a:string))
+endfunction
