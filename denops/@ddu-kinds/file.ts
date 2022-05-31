@@ -242,6 +242,7 @@ export class Kind extends BaseKind<Params> {
 
       const newFile = isAbsolute(input) ? input : join(cwd, input);
 
+      // Exists check
       try {
         const stat = await Deno.stat(newFile);
         if (stat.isDirectory || stat.isFile || stat.isSymlink) {
@@ -359,6 +360,47 @@ export class Kind extends BaseKind<Params> {
       }
 
       return ActionFlags.Persist;
+    },
+    rename: async (
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    ) => {
+      let cwd = args.sourceOptions.path;
+      if (cwd == "") {
+        cwd = await fn.getcwd(args.denops) as string;
+      }
+
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+
+        const newPath = await args.denops.call(
+          "ddu#kind#file#cwd_input",
+          cwd,
+          `Please input a new file name: ${path} -> `,
+          path,
+          "file",
+        ) as string;
+
+        if (newPath == "" || path == newPath) {
+          continue;
+        }
+
+        // Exists check
+        try {
+          const stat = await Deno.stat(newPath);
+          if (stat.isDirectory || stat.isFile || stat.isSymlink) {
+            await args.denops.call("ddu#kind#file#print",
+                                   `${newPath} already exists.`);
+            return ActionFlags.Persist;
+          }
+        } catch (_: unknown) {
+          // Ignore stat exception
+        }
+
+        await Deno.rename(path, newPath);
+      }
+
+      return ActionFlags.RefreshItems;
     },
   };
 

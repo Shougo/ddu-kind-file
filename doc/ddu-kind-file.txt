@@ -67,11 +67,6 @@ loclist
 move
 		Move the selected files to ddu clipboard.
 
-paste						*ddu-kind-file-action-paste*
-		Fire the clipboard action in the current directory.
-		Note: It is used after |ddu-kind-file-action-copy| or
-		|ddu-kind-file-action-move|.
-
 						*ddu-kind-file-action-narrow*
 narrow
 		Change |ddu-source-option-path| to the directory.
@@ -98,9 +93,17 @@ open
 			{command}:	open command.
 					(Default: "edit")
 
+paste						*ddu-kind-file-action-paste*
+		Fire the clipboard action in the current directory.
+		Note: It is used after |ddu-kind-file-action-copy| or
+		|ddu-kind-file-action-move|.
+
 				    	*ddu-kind-file-action-quickfix*
 quickfix
 		Set the |quickfix| list and open the |quickfix| window.
+
+rename						      *ddu-kind-action-rename*
+		Rename the file/directory under cursor or from selected list.
 
 				    	*ddu-kind-file-action-yank*
 yank
