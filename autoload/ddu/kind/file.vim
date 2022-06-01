@@ -63,7 +63,9 @@ endfunction
 function! ddu#kind#file#cwd_input(cwd, prompt, text, completion) abort
   let prev = getcwd()
   try
-    call chdir(a:cwd)
+    if a:cwd !=# ''
+      call chdir(a:cwd)
+    endif
     return input(a:prompt, a:text, a:completion)
   finally
     call chdir(prev)

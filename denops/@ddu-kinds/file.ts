@@ -194,7 +194,7 @@ export class Kind extends BaseKind<Params> {
         cwd,
         "Please input a new directory name: ",
         "",
-        "file",
+        "dir",
       ) as string;
       if (input == "") {
         return ActionFlags.Persist;
@@ -321,12 +321,37 @@ export class Kind extends BaseKind<Params> {
         for (const item of args.clipboard.items) {
           const action = item?.action as ActionData;
           const path = action.path ?? item.word;
-          await copy(path, join(cwd, basename(path)));
+
+          const dest = await checkOverwrite(
+            args.denops,
+            path,
+            join(cwd, basename(path)),
+          );
+          if (dest == "") {
+            continue;
+          }
+
+          if (await exists(dest)) {
+            await Deno.remove(dest, { recursive: true });
+          }
+          await copy(path, dest);
         }
       } else if (args.clipboard.action == "move") {
         for (const item of args.clipboard.items) {
           const action = item?.action as ActionData;
           const path = action.path ?? item.word;
+          const dest = await checkOverwrite(
+            args.denops,
+            path,
+            join(cwd, basename(path)),
+          );
+          if (dest == "") {
+            continue;
+          }
+
+          if (await exists(dest)) {
+            await Deno.remove(dest, { recursive: true });
+          }
           await move(path, join(cwd, basename(path)));
         }
       } else {
@@ -380,9 +405,9 @@ export class Kind extends BaseKind<Params> {
         const newPath = await args.denops.call(
           "ddu#kind#file#cwd_input",
           cwd,
-          `Please input a new file name: ${path} -> `,
+          `Please input a new name: ${path} -> `,
           path,
-          "file",
+          (await isDirectory(path)) ? "dir" : "file",
         ) as string;
 
         if (newPath == "" || path == newPath) {
@@ -554,4 +579,75 @@ const exists = async (path: string) => {
   }
 
   return false;
+};
+
+const isDirectory = async (path: string) => {
+  // Note: Deno.stat() may be failed
+  try {
+    const stat = await Deno.stat(path);
+    return stat.isDirectory;
+  } catch (_: unknown) {
+    // Ignore stat exception
+  }
+
+  return false;
+};
+
+const checkOverwrite = async (
+  denops: Denops,
+  src: string,
+  dest: string,
+): Promise<string> => {
+  if (!(await exists(src)) || !(await exists(dest))) {
+    return "";
+  }
+
+  const sStat = await Deno.stat(src);
+  await denops.call("ddu#kind#file#print", ` src: ${src} ${sStat.size} bytes`);
+  await denops.call(
+    "ddu#kind#file#print",
+    `      ${sStat.mtime?.toISOString()}`,
+  );
+  const dStat = await Deno.stat(dest);
+  await denops.call("ddu#kind#file#print", `dest: ${dest} ${dStat.size} bytes`);
+  await denops.call(
+    "ddu#kind#file#print",
+    `      ${dStat.mtime?.toISOString()}`,
+  );
+
+  const confirm = await denops.call(
+    "ddu#kind#file#confirm",
+    `${dest} already exists.  Overwrite?`,
+    "&Force\n&No\n&Rename\n&Time\n&Underbar",
+    0,
+  ) as number;
+
+  let ret = "";
+
+  switch (confirm) {
+    case 1:
+      ret = dest;
+      break;
+    case 2:
+      break;
+    case 3:
+      ret = await denops.call(
+        "ddu#kind#file#cwd_input",
+        "",
+        `Please input a new name: ${dest} -> `,
+        dest,
+        (await isDirectory(src)) ? "dir" : "file",
+      ) as string;
+      break;
+    case 4:
+      if (dStat.mtime && sStat.mtime && dStat.mtime < sStat.mtime) {
+        ret = src;
+      }
+      break;
+    case 5:
+      ret = dest + "_";
+      break;
+  }
+
+  return ret;
 };
