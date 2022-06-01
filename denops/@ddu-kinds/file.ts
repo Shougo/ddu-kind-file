@@ -202,13 +202,13 @@ export class Kind extends BaseKind<Params> {
 
       const newDirectory = isAbsolute(input) ? input : join(cwd, input);
 
-      try {
-        const stat = await Deno.stat(newDirectory);
-        if (stat.isDirectory || stat.isFile || stat.isSymlink) {
-          return ActionFlags.Persist;
-        }
-      } catch (_: unknown) {
-        // Ignore stat exception
+      // Exists check
+      if (await exists(newDirectory)) {
+        await args.denops.call(
+          "ddu#kind#file#print",
+          `${newDirectory} already exists.`,
+        );
+        return ActionFlags.Persist;
       }
 
       await Deno.mkdir(newDirectory);
@@ -243,13 +243,12 @@ export class Kind extends BaseKind<Params> {
       const newFile = isAbsolute(input) ? input : join(cwd, input);
 
       // Exists check
-      try {
-        const stat = await Deno.stat(newFile);
-        if (stat.isDirectory || stat.isFile || stat.isSymlink) {
-          return ActionFlags.Persist;
-        }
-      } catch (_: unknown) {
-        // Ignore stat exception
+      if (await exists(newFile)) {
+        await args.denops.call(
+          "ddu#kind#file#print",
+          `${newFile} already exists.`,
+        );
+        return ActionFlags.Persist;
       }
 
       await Deno.writeTextFile(newFile, "");
@@ -391,17 +390,12 @@ export class Kind extends BaseKind<Params> {
         }
 
         // Exists check
-        try {
-          const stat = await Deno.stat(newPath);
-          if (stat.isDirectory || stat.isFile || stat.isSymlink) {
-            await args.denops.call(
-              "ddu#kind#file#print",
-              `${newPath} already exists.`,
-            );
-            return ActionFlags.Persist;
-          }
-        } catch (_: unknown) {
-          // Ignore stat exception
+        if (await exists(newPath)) {
+          await args.denops.call(
+            "ddu#kind#file#print",
+            `${newPath} already exists.`,
+          );
+          return ActionFlags.Persist;
         }
 
         await Deno.rename(path, newPath);
@@ -546,4 +540,18 @@ const getDirectory = async (item: DduItem) => {
 const getPath = (item: DduItem) => {
   const action = item?.action as ActionData;
   return action.path ?? item.word;
+};
+
+const exists = async (path: string) => {
+  // Note: Deno.stat() may be failed
+  try {
+    const stat = await Deno.stat(path);
+    if (stat.isDirectory || stat.isFile || stat.isSymlink) {
+      return true;
+    }
+  } catch (_: unknown) {
+    // Ignore stat exception
+  }
+
+  return false;
 };
