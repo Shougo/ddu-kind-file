@@ -334,7 +334,7 @@ export class Kind extends BaseKind<Params> {
           if (await exists(dest)) {
             await Deno.remove(dest, { recursive: true });
           }
-          await copy(path, dest);
+          await copy(path, dest, { overwrite: true });
         }
       } else if (args.clipboard.action == "move") {
         for (const item of args.clipboard.items) {
@@ -598,8 +598,11 @@ const checkOverwrite = async (
   src: string,
   dest: string,
 ): Promise<string> => {
-  if (!(await exists(src)) || !(await exists(dest))) {
+  if (!(await exists(src))) {
     return "";
+  }
+  if (!(await exists(dest))) {
+    return dest;
   }
 
   const sStat = await Deno.stat(src);
