@@ -86,7 +86,7 @@ export class Kind extends BaseKind<Params> {
       args.clipboard.items = args.items;
       args.clipboard.mode = "";
 
-      return ActionFlags.RefreshItems;
+      return ActionFlags.Persist;
     },
     delete: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
@@ -149,7 +149,7 @@ export class Kind extends BaseKind<Params> {
       args.clipboard.items = args.items;
       args.clipboard.mode = "";
 
-      return ActionFlags.RefreshItems;
+      return ActionFlags.Persist;
     },
     narrow: async (args: {
       denops: Denops;
