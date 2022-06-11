@@ -444,7 +444,7 @@ export class Kind extends BaseKind<Params> {
 
     const param = ensureObject(args.actionParams) as PreviewOption;
 
-    if (action.path && param.previewCmds) {
+    if (action.path && param.previewCmds?.length) {
       const previewHeight = args.previewContext.height;
       let startLine = 0;
       let lineNr = 0;
