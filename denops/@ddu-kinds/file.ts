@@ -606,21 +606,16 @@ const checkOverwrite = async (
   }
 
   const sStat = await Deno.stat(src);
-  await denops.call("ddu#kind#file#print", ` src: ${src} ${sStat.size} bytes`);
-  await denops.call(
-    "ddu#kind#file#print",
-    `      ${sStat.mtime?.toISOString()}`,
-  );
   const dStat = await Deno.stat(dest);
-  await denops.call("ddu#kind#file#print", `dest: ${dest} ${dStat.size} bytes`);
-  await denops.call(
-    "ddu#kind#file#print",
-    `      ${dStat.mtime?.toISOString()}`,
-  );
 
+  const message = ` src: ${src} ${sStat.size} bytes\n` +
+    `      ${sStat.mtime?.toISOString()}\n` +
+    `dest: ${dest} ${dStat.size} bytes\n` +
+    `      ${dStat.mtime?.toISOString()}\n` +
+    `${dest} already exists.  Overwrite?`;
   const confirm = await denops.call(
     "ddu#kind#file#confirm",
-    `${dest} already exists.  Overwrite?`,
+    message,
     "&Force\n&No\n&Rename\n&Time\n&Underbar",
     0,
   ) as number;
