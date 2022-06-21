@@ -105,6 +105,12 @@ quickfix
 rename						      *ddu-kind-action-rename*
 		Rename the file/directory under cursor or from selected list.
 
+						*ddu-kind-file-action-trash*
+trash
+		Move the file or directory to the trash.
+		Note: "npx" command is required.
+		Note: It is slow.
+
 				    	*ddu-kind-file-action-yank*
 yank
 		Yank the file path.

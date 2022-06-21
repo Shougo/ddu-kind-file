@@ -428,6 +428,55 @@ export class Kind extends BaseKind<Params> {
 
       return ActionFlags.RefreshItems;
     },
+    trash: async (
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    ) => {
+      const message = `Are you sure you want to move to the trash ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }?`;
+
+      const confirm = await args.denops.call(
+        "ddu#kind#file#confirm",
+        message,
+        "&Yes\n&No\n&Cancel",
+        2,
+      ) as number;
+      if (confirm != 1) {
+        return ActionFlags.Persist;
+      }
+
+      for (const item of args.items) {
+        try {
+          const p = Deno.run({
+            cmd: ["npx", "trash-cli", getPath(item)],
+            stdout: "piped",
+            stderr: "piped",
+            stdin: "piped",
+          });
+          await p.status();
+        } catch (e) {
+          await args.denops.call(
+            "ddu#util#print_error",
+            'Run "npx trash-cli" is failed.',
+          );
+          await args.denops.call(
+            "ddu#util#print_error",
+            '"npx" binary seems not installed.',
+          );
+
+          if (e instanceof Error) {
+            await args.denops.call(
+              "ddu#util#print_error",
+              e.message,
+            );
+          }
+        }
+      }
+
+      return ActionFlags.RefreshItems;
+    },
   };
 
   // deno-lint-ignore require-await
