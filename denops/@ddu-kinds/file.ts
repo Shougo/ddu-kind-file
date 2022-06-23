@@ -4,6 +4,7 @@ import {
   BaseKind,
   Clipboard,
   DduItem,
+  DduOptions,
   PreviewContext,
   Previewer,
   SourceOptions,
@@ -390,9 +391,29 @@ export class Kind extends BaseKind<Params> {
 
       return ActionFlags.Persist;
     },
-    rename: async (
-      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+    rename: async (args: {
+      denops: Denops;
+      options: DduOptions;
+      items: DduItem[];
+      sourceOptions: SourceOptions;
+    },
     ) => {
+      if (args.items.length > 1) {
+        // Use exrename instead
+        await args.denops.call(
+          "ddu#kind#file#exrename#create_buffer",
+          args.items.map((item) => {
+            return {
+              action__path: (item?.action as ActionData).path ?? item.word,
+            };
+          }),
+          {
+            name: args.options.name,
+          },
+        );
+        return ActionFlags.Persist;
+      }
+
       let cwd = args.sourceOptions.path;
       if (cwd == "") {
         cwd = await fn.getcwd(args.denops) as string;
