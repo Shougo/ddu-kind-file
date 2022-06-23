@@ -18,10 +18,9 @@ function! ddu#kind#file#exrename#create_buffer(items, ...) abort
     " current working directory MUST end with a trailing slash
     let options.cwd .= '/'
   endif
-  if options.buffer_name ==# ''
-    let options.buffer_name = s:PREFIX
-  else
-    let options.buffer_name = s:PREFIX . ' - ' . options.buffer_name
+  let options.buffer_name = s:PREFIX
+  if options.buffer_name !=# ''
+    let options.buffer_name .= ' - ' . options.buffer_name
   endif
 
   let winid = win_getid()
