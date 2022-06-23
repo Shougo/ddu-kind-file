@@ -1,3 +1,10 @@
+"=============================================================================
+" FILE: exrename.vim
+" AUTHOR: Shougo Matsushita <Shougo.Matsu at gmail.com>
+" EDITOR: Alisue <lambdalisue at hashnote.net>
+" License: MIT license
+"=============================================================================
+
 let s:PREFIX = has('win32') ? '[exrename]' : '*exrename*'
 
 function! ddu#kind#file#exrename#create_buffer(items, ...) abort
