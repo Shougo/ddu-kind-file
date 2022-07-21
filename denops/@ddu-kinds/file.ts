@@ -8,22 +8,22 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.7.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v1.8.7/types.ts";
 import {
   basename,
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.141.0/path/mod.ts";
+} from "https://deno.land/std@0.149.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v1.7.0/deps.ts";
-import { copy, move } from "https://deno.land/std@0.141.0/fs/mod.ts";
+} from "https://deno.land/x/ddu_vim@v1.8.7/deps.ts";
+import { copy, move } from "https://deno.land/std@0.149.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -258,6 +258,7 @@ export class Kind extends BaseKind<Params> {
     },
     open: async (args: {
       denops: Denops;
+      context: Context;
       actionParams: unknown;
       items: DduItem[];
     }) => {
@@ -288,7 +289,15 @@ export class Kind extends BaseKind<Params> {
 
         if (action.lineNr != null) {
           await fn.cursor(args.denops, action.lineNr, 0);
+
+          if (args.context.input != "") {
+            // Search the input text
+            const text = (await fn.getline(args.denops, ".")).toLowerCase();
+            const input = args.context.input.toLowerCase();
+            await fn.cursor(args.denops, 0, text.indexOf(input) + 1);
+          }
         }
+
         if (action.col != null) {
           await fn.cursor(args.denops, 0, action.col);
         }
