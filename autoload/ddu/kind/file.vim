@@ -61,6 +61,8 @@ function! ddu#kind#file#open(filename) abort
 endfunction
 
 function! ddu#kind#file#cwd_input(cwd, prompt, text, completion) abort
+  redraw
+
   let prev = getcwd()
   try
     if a:cwd !=# ''

@@ -454,6 +454,12 @@ export class Kind extends BaseKind<Params> {
         }
 
         await Deno.rename(path, newPath);
+
+        await args.denops.call(
+          "ddu#kind#file#buffer_rename",
+          await fn.bufnr(args.denops, path),
+          newPath,
+        );
       }
 
       return ActionFlags.RefreshItems;
