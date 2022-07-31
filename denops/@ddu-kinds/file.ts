@@ -252,7 +252,11 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
-      await Deno.writeTextFile(newFile, "");
+      if (newFile.slice(-1) == "/"){
+        await Deno.mkdir(newFile);
+      } else {
+        await Deno.writeTextFile(newFile, "");
+      }
 
       return ActionFlags.RefreshItems;
     },
