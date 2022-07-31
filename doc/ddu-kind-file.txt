@@ -84,6 +84,7 @@ newDirectory
 						*ddu-kind-file-action-newFile*
 newFile
 		Make new file.
+		If the input ends with "/", it means new directory.
 
 						*ddu-kind-file-action-open*
 open
