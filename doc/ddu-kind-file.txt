@@ -79,11 +79,12 @@ narrow
 
 					*ddu-kind-file-action-newDirectory*
 newDirectory
-		Make new directory.
+		Make new directory in expanded directory tree or current
+		directory.
 
 						*ddu-kind-file-action-newFile*
 newFile
-		Make new file.
+		Make new file in expanded directory tree or current directory.
 		If the input ends with "/", it means new directory.
 
 						*ddu-kind-file-action-open*
