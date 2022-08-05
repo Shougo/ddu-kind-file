@@ -69,6 +69,7 @@ function! ddu#kind#file#cwd_input(cwd, prompt, text, completion) abort
       call chdir(a:cwd)
     endif
     return input(a:prompt, a:text, a:completion)
+  catch /^Vim:Interrupt/
   finally
     call chdir(prev)
   endtry
