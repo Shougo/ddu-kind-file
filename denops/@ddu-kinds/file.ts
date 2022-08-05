@@ -179,16 +179,11 @@ export class Kind extends BaseKind<Params> {
     newDirectory: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
     ) => {
-      let cwd = args.sourceOptions.path;
-      for (const item of args.items) {
-        if (item.__expanded) {
-          cwd = await getDirectory(item);
-        }
-      }
-
-      if (cwd == "") {
-        cwd = await fn.getcwd(args.denops) as string;
-      }
+      const cwd = await getTargetDirectory(
+        args.denops,
+        args.sourceOptions.path,
+        args.items,
+      );
 
       const input = await args.denops.call(
         "ddu#kind#file#cwd_input",
@@ -219,16 +214,11 @@ export class Kind extends BaseKind<Params> {
     newFile: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
     ) => {
-      let cwd = args.sourceOptions.path;
-      for (const item of args.items) {
-        if (item.__expanded) {
-          cwd = await getDirectory(item);
-        }
-      }
-
-      if (cwd == "") {
-        cwd = await fn.getcwd(args.denops) as string;
-      }
+      const cwd = await getTargetDirectory(
+        args.denops,
+        args.sourceOptions.path,
+        args.items,
+      );
 
       const input = await args.denops.call(
         "ddu#kind#file#cwd_input",
@@ -252,7 +242,7 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
-      if (newFile.slice(-1) == "/"){
+      if (newFile.slice(-1) == "/") {
         await Deno.mkdir(newFile);
       } else {
         await Deno.writeTextFile(newFile, "");
@@ -320,16 +310,11 @@ export class Kind extends BaseKind<Params> {
         clipboard: Clipboard;
       },
     ) => {
-      let cwd = args.sourceOptions.path;
-      for (const item of args.items) {
-        if (item.__expanded) {
-          cwd = await getDirectory(item);
-        }
-      }
-
-      if (cwd == "") {
-        cwd = await fn.getcwd(args.denops) as string;
-      }
+      const cwd = await getTargetDirectory(
+        args.denops,
+        args.sourceOptions.path,
+        args.items,
+      );
 
       if (args.clipboard.action == "copy") {
         for (const item of args.clipboard.items) {
@@ -409,8 +394,7 @@ export class Kind extends BaseKind<Params> {
       options: DduOptions;
       items: DduItem[];
       sourceOptions: SourceOptions;
-    },
-    ) => {
+    }) => {
       if (args.items.length > 1) {
         // Use exrename instead
         await args.denops.call(
@@ -630,6 +614,26 @@ const buildQfLocList = (items: DduItem[]) => {
   }
 
   return qfloclist;
+};
+
+const getTargetDirectory = async (
+  denops: Denops,
+  initPath: string,
+  items: DduItem[],
+) => {
+  let dir = initPath;
+  for (const item of items) {
+    const action = item?.action as ActionData;
+    const path = action.path ?? item.word;
+
+    dir = item.__expanded ? path : dirname(path);
+  }
+
+  if (dir == "") {
+    dir = await fn.getcwd(denops) as string;
+  }
+
+  return dir;
 };
 
 const getDirectory = async (item: DduItem) => {
