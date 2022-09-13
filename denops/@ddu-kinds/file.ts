@@ -35,7 +35,9 @@ export type ActionData = {
   text?: string;
 };
 
-type Params = Record<never, never>;
+type Params = {
+  trashCommand: string[];
+};
 
 type NarrowParams = {
   path: string;
@@ -458,7 +460,12 @@ export class Kind extends BaseKind<Params> {
       return ActionFlags.RefreshItems;
     },
     trash: async (
-      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        kindParams: Params;
+      },
     ) => {
       const message = `Are you sure you want to move to the trash ${
         args.items.length > 1
@@ -476,10 +483,22 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
+      const trashCommand = args.kindParams.trashCommand;
+
+      if (!await fn.executable(args.denops, trashCommand[0])) {
+        await args.denops.call(
+          "ddu#util#print_error",
+          `${trashCommand[0]} is not found.`,
+        );
+        return ActionFlags.Persist;
+      }
+
       for (const item of args.items) {
+        const cmd = Array.from(trashCommand);
+        cmd.push(getPath(item));
         try {
           const p = Deno.run({
-            cmd: ["npx", "trash-cli", getPath(item)],
+            cmd,
             stdout: "piped",
             stderr: "piped",
             stdin: "piped",
@@ -488,11 +507,7 @@ export class Kind extends BaseKind<Params> {
         } catch (e) {
           await args.denops.call(
             "ddu#util#print_error",
-            'Run "npx trash-cli" is failed.',
-          );
-          await args.denops.call(
-            "ddu#util#print_error",
-            '"npx" binary seems not installed.',
+            `Run ${cmd} is failed.`,
           );
 
           if (e instanceof Error) {
@@ -585,7 +600,9 @@ export class Kind extends BaseKind<Params> {
   }
 
   params(): Params {
-    return {};
+    return {
+      trashCommand: ["gio", "trash"],
+    };
   }
 }
 
