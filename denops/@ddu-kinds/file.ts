@@ -3,27 +3,28 @@ import {
   Actions,
   BaseKind,
   Clipboard,
+  Context,
   DduItem,
   DduOptions,
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.8.7/types.ts";
+} from "https://deno.land/x/ddu_vim@v1.10.1/types.ts";
 import {
   basename,
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.149.0/path/mod.ts";
+} from "https://deno.land/std@0.155.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v1.8.7/deps.ts";
-import { copy, move } from "https://deno.land/std@0.149.0/fs/mod.ts";
+} from "https://deno.land/x/ddu_vim@v1.10.1/deps.ts";
+import { copy, move } from "https://deno.land/std@0.155.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -264,7 +265,11 @@ export class Kind extends BaseKind<Params> {
 
         if (action.bufNr != null) {
           if (openCommand != "edit") {
-            await args.denops.call("ddu#util#execute_path", openCommand, "");
+            await args.denops.call(
+              "ddu#util#execute_path",
+              openCommand,
+              action.path ?? "",
+            );
           }
           await args.denops.cmd(`buffer ${action.bufNr}`);
         } else {
