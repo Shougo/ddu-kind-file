@@ -9,7 +9,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.10.1/types.ts";
+} from "https://deno.land/x/ddu_vim@v2.5.2/types.ts";
 import {
   basename,
   dirname,
@@ -23,13 +23,14 @@ import {
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v1.10.1/deps.ts";
+} from "https://deno.land/x/ddu_vim@v2.5.2/deps.ts";
 import { copy, move } from "https://deno.land/std@0.155.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
   col?: number;
   isDirectory?: boolean;
+  isLink?: boolean;
   lineNr?: number;
   path?: string;
   text?: string;
