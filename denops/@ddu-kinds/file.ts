@@ -9,22 +9,22 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.5.2/types.ts";
+} from "https://deno.land/x/ddu_vim@v1.11.0/types.ts";
 import {
   basename,
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.155.0/path/mod.ts";
+} from "https://deno.land/std@0.158.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v2.5.2/deps.ts";
-import { copy, move } from "https://deno.land/std@0.155.0/fs/mod.ts";
+} from "https://deno.land/x/ddu_vim@v1.11.0/deps.ts";
+import { copy, move } from "https://deno.land/std@0.158.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -211,7 +211,7 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
-      await Deno.mkdir(newDirectory);
+      await Deno.mkdir(newDirectory, { recursive: true });
 
       return ActionFlags.RefreshItems;
     },
@@ -247,7 +247,7 @@ export class Kind extends BaseKind<Params> {
       }
 
       if (newFile.slice(-1) == "/") {
-        await Deno.mkdir(newFile);
+        await Deno.mkdir(newFile, { recursive: true });
       } else {
         await Deno.writeTextFile(newFile, "");
       }
