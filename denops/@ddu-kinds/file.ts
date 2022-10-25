@@ -9,22 +9,22 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.11.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v1.12.0/types.ts";
 import {
   basename,
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.158.0/path/mod.ts";
+} from "https://deno.land/std@0.160.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v1.11.0/deps.ts";
-import { copy, move } from "https://deno.land/std@0.158.0/fs/mod.ts";
+} from "https://deno.land/x/ddu_vim@v1.12.0/deps.ts";
+import { copy, move } from "https://deno.land/std@0.160.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -213,7 +213,10 @@ export class Kind extends BaseKind<Params> {
 
       await Deno.mkdir(newDirectory, { recursive: true });
 
-      return ActionFlags.RefreshItems;
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath: newDirectory,
+      };
     },
     newFile: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
@@ -252,7 +255,10 @@ export class Kind extends BaseKind<Params> {
         await Deno.writeTextFile(newFile, "");
       }
 
-      return ActionFlags.RefreshItems;
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath: newFile,
+      };
     },
     open: async (args: {
       denops: Denops;
@@ -324,6 +330,7 @@ export class Kind extends BaseKind<Params> {
         args.items,
       );
 
+      let searchPath = "";
       if (args.clipboard.action == "copy") {
         for (const item of args.clipboard.items) {
           const action = item?.action as ActionData;
@@ -342,6 +349,7 @@ export class Kind extends BaseKind<Params> {
             await Deno.remove(dest, { recursive: true });
           }
           await copy(path, dest, { overwrite: true });
+          searchPath = dest;
         }
       } else if (args.clipboard.action == "move") {
         for (const item of args.clipboard.items) {
@@ -360,6 +368,7 @@ export class Kind extends BaseKind<Params> {
             await Deno.remove(dest, { recursive: true });
           }
           await move(path, join(cwd, basename(path)));
+          searchPath = dest;
         }
       } else {
         await args.denops.call(
@@ -369,7 +378,10 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
-      return ActionFlags.RefreshItems;
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath,
+      };
     },
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
