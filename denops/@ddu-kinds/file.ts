@@ -473,7 +473,7 @@ export class Kind extends BaseKind<Params> {
 
       return {
         flags: ActionFlags.RefreshItems,
-        newPath,
+        searchPath: newPath,
       };
     },
     trash: async (
