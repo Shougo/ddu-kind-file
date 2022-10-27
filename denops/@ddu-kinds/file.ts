@@ -16,7 +16,7 @@ import {
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.160.0/path/mod.ts";
+} from "https://deno.land/std@0.161.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
@@ -24,7 +24,7 @@ import {
   op,
   vars,
 } from "https://deno.land/x/ddu_vim@v1.12.0/deps.ts";
-import { copy, move } from "https://deno.land/std@0.160.0/fs/mod.ts";
+import { copy, move } from "https://deno.land/std@0.161.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -436,11 +436,12 @@ export class Kind extends BaseKind<Params> {
         cwd = await fn.getcwd(args.denops) as string;
       }
 
+      let newPath = "";
       for (const item of args.items) {
         const action = item?.action as ActionData;
         const path = action.path ?? item.word;
 
-        const newPath = await args.denops.call(
+        newPath = await args.denops.call(
           "ddu#kind#file#cwd_input",
           cwd,
           `Please input a new name: ${path} -> `,
@@ -470,7 +471,10 @@ export class Kind extends BaseKind<Params> {
         );
       }
 
-      return ActionFlags.RefreshItems;
+      return {
+        flags: ActionFlags.RefreshItems,
+        newPath,
+      };
     },
     trash: async (
       args: {
