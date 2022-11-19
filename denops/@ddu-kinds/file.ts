@@ -9,22 +9,22 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v1.12.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v2.0.0/types.ts";
 import {
   basename,
   dirname,
   isAbsolute,
   join,
   resolve,
-} from "https://deno.land/std@0.161.0/path/mod.ts";
+} from "https://deno.land/std@0.165.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v1.12.0/deps.ts";
-import { copy, move } from "https://deno.land/std@0.161.0/fs/mod.ts";
+} from "https://deno.land/x/ddu_vim@v2.0.0/deps.ts";
+import { copy, move } from "https://deno.land/std@0.165.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
