@@ -62,6 +62,12 @@ type PreviewOption = {
 
 export class Kind extends BaseKind<Params> {
   actions: Actions<Params> = {
+    append: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        await paste(args.denops, item, "p");
+      }
+      return Promise.resolve(ActionFlags.None);
+    },
     cd: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
         const dir = await getDirectory(item);
@@ -128,6 +134,18 @@ export class Kind extends BaseKind<Params> {
       }
 
       return ActionFlags.Persist;
+    },
+    feedkeys: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        await feedkeys(args.denops, item);
+      }
+      return Promise.resolve(ActionFlags.None);
+    },
+    insert: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        await paste(args.denops, item, "P");
+      }
+      return Promise.resolve(ActionFlags.None);
     },
     loclist: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
@@ -780,4 +798,36 @@ const checkOverwrite = async (
   }
 
   return ret;
+};
+
+const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
+  const action = item?.action as ActionData;
+
+  if (action.path == null) {
+    return;
+  }
+
+  const oldValue = fn.getreg(denops, '"');
+  const oldType = fn.getregtype(denops, '"');
+
+  await fn.setreg(denops, '"', action.path, "v");
+  try {
+    await denops.cmd('normal! ""' + pasteKey);
+  } finally {
+    await fn.setreg(denops, '"', oldValue, oldType);
+  }
+
+  // Open folds
+  await denops.cmd("normal! zv");
+};
+
+const feedkeys = async (denops: Denops, item: DduItem) => {
+  const action = item?.action as ActionData;
+
+  if (action.path == null) {
+    return;
+  }
+
+  // Use feedkeys() instead
+  await fn.feedkeys(denops, action.path, "n");
 };

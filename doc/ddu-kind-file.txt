@@ -43,6 +43,10 @@ EXAMPLES					*ddu-kind-file-examples*
 ==============================================================================
 ACTIONS						*ddu-kind-file-actions*
 
+						*ddu-kind-file-action-append*
+append
+		Paste the path like |p|.
+
 						*ddu-kind-file-action-cd*
 cd
 		Call |chdir()| the directory.
@@ -58,6 +62,15 @@ delete
 					*ddu-kind-file-action-executeSystem*
 executeSystem
 		Execute the file by system associated command.
+
+						*ddu-kind-file-action-feedkeys*
+feedkeys
+		Use |feedkeys()| to insert the path.
+		It is useful in command line mode.
+
+						*ddu-kind-file-action-insert*
+insert
+		Paste the path like |P|.
 
 						*ddu-kind-file-action-loclist*
 loclist
