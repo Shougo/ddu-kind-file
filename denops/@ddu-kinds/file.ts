@@ -61,7 +61,7 @@ type PreviewOption = {
 };
 
 export class Kind extends BaseKind<Params> {
-  actions: Actions<Params> = {
+  override actions: Actions<Params> = {
     append: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
         await paste(args.denops, item, "p");
@@ -559,7 +559,7 @@ export class Kind extends BaseKind<Params> {
   };
 
   // deno-lint-ignore require-await
-  async getPreviewer(args: {
+  override async getPreviewer(args: {
     denops: Denops;
     item: DduItem;
     actionParams: unknown;
@@ -634,7 +634,7 @@ export class Kind extends BaseKind<Params> {
     };
   }
 
-  params(): Params {
+  override params(): Params {
     return {
       trashCommand: ["gio", "trash"],
     };
