@@ -349,16 +349,20 @@ export class Kind extends BaseKind<Params> {
       );
 
       let searchPath = "";
+      let defaultConfirm = "";
       if (args.clipboard.action == "copy") {
         for (const item of args.clipboard.items) {
           const action = item?.action as ActionData;
           const path = action.path ?? item.word;
 
-          const dest = await checkOverwrite(
+          const ret = await checkOverwrite(
             args.denops,
             path,
             join(cwd, basename(path)),
+            defaultConfirm,
           );
+          const dest = ret.dest;
+          defaultConfirm = ret.defaultConfirm;
           if (dest == "") {
             continue;
           }
@@ -373,11 +377,14 @@ export class Kind extends BaseKind<Params> {
         for (const item of args.clipboard.items) {
           const action = item?.action as ActionData;
           const path = action.path ?? item.word;
-          const dest = await checkOverwrite(
+          const ret = await checkOverwrite(
             args.denops,
             path,
             join(cwd, basename(path)),
+            defaultConfirm,
           );
+          const dest = ret.dest;
+          defaultConfirm = ret.defaultConfirm;
           if (dest == "") {
             continue;
           }
@@ -747,12 +754,13 @@ const checkOverwrite = async (
   denops: Denops,
   src: string,
   dest: string,
-): Promise<string> => {
+  defaultConfirm: string,
+): Promise<{ dest: string; defaultConfirm: string }> => {
   if (!(await exists(src))) {
-    return "";
+    return { dest: "", defaultConfirm: "" };
   }
   if (!(await exists(dest))) {
-    return dest;
+    return { dest: "dest", defaultConfirm: "" };
   }
 
   const sStat = await Deno.stat(src);
@@ -762,23 +770,28 @@ const checkOverwrite = async (
     `      ${sStat.mtime?.toISOString()}\n` +
     `dest: ${dest} ${dStat.size} bytes\n` +
     `      ${dStat.mtime?.toISOString()}\n` +
-    `${dest} already exists.  Overwrite?`;
-  const confirm = await denops.call(
-    "ddu#kind#file#confirm",
-    message,
-    "&Force\n&No\n&Rename\n&Time\n&Underbar",
-    0,
-  ) as number;
+    `${dest} already exists.  Overwrite? (Upper case is all)\n` +
+    "f[orce]/t[ime]/u[nderbar]/n[o]/r[ename] : ";
+
+  // NOTE: Uppercase defaultConfirm skips user input
+  const confirm =
+    (defaultConfirm != "" && defaultConfirm.toLowerCase() != defaultConfirm)
+      ? defaultConfirm
+      : await denops.call(
+        "ddu#kind#file#check_overwrite_method",
+        message,
+        "no",
+      ) as string;
 
   let ret = "";
 
-  switch (confirm) {
-    case 1:
+  switch (confirm.toLowerCase()) {
+    case "f":
       ret = dest;
       break;
-    case 2:
+    case "n":
       break;
-    case 3:
+    case "r":
       ret = await denops.call(
         "ddu#kind#file#cwd_input",
         "",
@@ -787,17 +800,17 @@ const checkOverwrite = async (
         (await isDirectory(src)) ? "dir" : "file",
       ) as string;
       break;
-    case 4:
+    case "t":
       if (dStat.mtime && sStat.mtime && dStat.mtime < sStat.mtime) {
         ret = src;
       }
       break;
-    case 5:
+    case "u":
       ret = dest + "_";
       break;
   }
 
-  return ret;
+  return { dest: ret, defaultConfirm: confirm };
 };
 
 const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {

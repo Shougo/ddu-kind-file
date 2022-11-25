@@ -87,14 +87,27 @@ function! s:check_wsl() abort
   return v:false
 endfunction
 
-function! ddu#kind#file#confirm(msg, choices, default) abort
+function! ddu#kind#file#getchar(default) abort
   try
-    return confirm(a:msg, a:choices, a:default)
+    return nr2char(getchar())
   catch
     " ignore the errors
   endtry
 
   return a:default
+endfunction
+
+function! ddu#kind#file#check_overwrite_method(msg, default) abort
+  let method = ''
+  while method !~? '^[fnrtu]$'
+    " Retry.
+    echo a:msg
+    let method = ddu#kind#file#getchar(a:default)
+  endwhile
+
+  redraw
+
+  return method
 endfunction
 
 function! ddu#kind#file#print(string, ...) abort
