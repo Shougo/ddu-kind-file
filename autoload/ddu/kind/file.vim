@@ -87,6 +87,16 @@ function! s:check_wsl() abort
   return v:false
 endfunction
 
+function! ddu#kind#file#confirm(msg, choices, default) abort
+  try
+    return confirm(a:msg, a:choices, a:default)
+  catch
+    " ignore the errors
+  endtry
+
+  return a:default
+endfunction
+
 function! ddu#kind#file#getchar(default) abort
   try
     return nr2char(getchar())
