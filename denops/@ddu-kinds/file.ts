@@ -367,10 +367,15 @@ export class Kind extends BaseKind<Params> {
             continue;
           }
 
+          await Deno.mkdir(dirname(dest), { recursive: true });
+
+          // Cannot overwrite files
           if (await exists(dest)) {
             await Deno.remove(dest, { recursive: true });
           }
+
           await copy(path, dest, { overwrite: true });
+
           searchPath = dest;
         }
       } else if (args.clipboard.action == "move") {
@@ -389,10 +394,15 @@ export class Kind extends BaseKind<Params> {
             continue;
           }
 
+          await Deno.mkdir(dirname(dest), { recursive: true });
+
+          // Cannot overwrite files
           if (await exists(dest)) {
             await Deno.remove(dest, { recursive: true });
           }
+
           await move(path, join(cwd, basename(path)));
+
           searchPath = dest;
         }
       } else {
@@ -486,6 +496,8 @@ export class Kind extends BaseKind<Params> {
           );
           return ActionFlags.Persist;
         }
+
+        await Deno.mkdir(dirname(newPath), { recursive: true });
 
         await Deno.rename(path, newPath);
 
@@ -760,7 +772,7 @@ const checkOverwrite = async (
     return { dest: "", defaultConfirm: "" };
   }
   if (!(await exists(dest))) {
-    return { dest: "dest", defaultConfirm: "" };
+    return { dest, defaultConfirm: "" };
   }
 
   const sStat = await Deno.stat(src);
