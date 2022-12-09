@@ -413,6 +413,10 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
+      if (searchPath == "") {
+        return ActionFlags.Persist;
+      }
+
       return {
         flags: ActionFlags.RefreshItems,
         searchPath,
