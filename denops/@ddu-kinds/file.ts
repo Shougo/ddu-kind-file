@@ -248,7 +248,7 @@ export class Kind extends BaseKind<Params> {
       const input = await args.denops.call(
         "ddu#kind#file#cwd_input",
         cwd,
-        "Please input a new file name: ",
+        "Please input names(comma separated): ",
         "",
         "file",
       ) as string;
@@ -256,27 +256,35 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
-      const newFile = isAbsolute(input) ? input : join(cwd, input);
+      let newFile = "";
 
-      // Exists check
-      if (await exists(newFile)) {
-        await args.denops.call(
-          "ddu#kind#file#print",
-          `${newFile} already exists.`,
-        );
+      for (const name of input.split(",")) {
+        newFile = isAbsolute(name) ? name : join(cwd, name);
+
+        // Exists check
+        if (await exists(newFile)) {
+          await args.denops.call(
+            "ddu#kind#file#print",
+            `${newFile} already exists.`,
+          );
+          continue;
+        }
+
+        if (newFile.slice(-1) == "/") {
+          await Deno.mkdir(newFile, { recursive: true });
+        } else {
+          await Deno.writeTextFile(newFile, "");
+        }
+      }
+
+      if (newFile == "") {
         return ActionFlags.Persist;
-      }
-
-      if (newFile.slice(-1) == "/") {
-        await Deno.mkdir(newFile, { recursive: true });
       } else {
-        await Deno.writeTextFile(newFile, "");
+        return {
+          flags: ActionFlags.RefreshItems,
+          searchPath: newFile,
+        };
       }
-
-      return {
-        flags: ActionFlags.RefreshItems,
-        searchPath: newFile,
-      };
     },
     open: async (args: {
       denops: Denops;
@@ -415,12 +423,12 @@ export class Kind extends BaseKind<Params> {
 
       if (searchPath == "") {
         return ActionFlags.Persist;
+      } else {
+        return {
+          flags: ActionFlags.RefreshItems,
+          searchPath,
+        };
       }
-
-      return {
-        flags: ActionFlags.RefreshItems,
-        searchPath,
-      };
     },
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);

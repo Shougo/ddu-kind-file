@@ -99,6 +99,7 @@ newDirectory
 newFile
 		Make new file in expanded directory tree or current directory.
 		If the input ends with "/", it means new directory.
+		If the input is comma separated, multiple files are created.
 
 						*ddu-kind-file-action-open*
 open
