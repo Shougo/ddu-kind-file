@@ -591,7 +591,6 @@ export class Kind extends BaseKind<Params> {
     },
   };
 
-  // deno-lint-ignore require-await
   override async getPreviewer(args: {
     denops: Denops;
     item: DduItem;
