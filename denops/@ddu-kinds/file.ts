@@ -306,6 +306,8 @@ export class Kind extends BaseKind<Params> {
               action.path ?? "",
             );
           }
+          // NOTE: bufNr may be hidden
+          await fn.bufload(args.denops, action.bufNr);
           await args.denops.cmd(`buffer ${action.bufNr}`);
         } else {
           const path = action.path ?? item.word;
