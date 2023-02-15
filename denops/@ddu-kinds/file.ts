@@ -659,6 +659,11 @@ export class Kind extends BaseKind<Params> {
       };
     }
 
+    if (action.bufNr) {
+      // NOTE: buffer may be hidden
+      await fn.bufload(args.denops, action.bufNr);
+    }
+
     return {
       kind: "buffer",
       path: action.bufNr === undefined ? action.path : undefined,
