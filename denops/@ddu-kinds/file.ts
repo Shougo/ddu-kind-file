@@ -182,10 +182,17 @@ export class Kind extends BaseKind<Params> {
     }) => {
       const params = args.actionParams as NarrowParams;
       if (params.path) {
-        args.sourceOptions.path = params.path == ".."
-          ? resolve(join(args.sourceOptions.path, ".."))
-          : params.path;
-        return ActionFlags.RefreshItems;
+        if (params.path == "..") {
+          const current = args.sourceOptions.path;
+          args.sourceOptions.path = resolve(join(current, ".."));
+          return {
+            flags: ActionFlags.RefreshItems,
+            searchPath: current,
+          };
+        } else {
+          args.sourceOptions.path = params.path;
+          return ActionFlags.RefreshItems;
+        }
       }
 
       for (const item of args.items) {
