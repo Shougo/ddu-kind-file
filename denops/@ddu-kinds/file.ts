@@ -15,7 +15,7 @@ import {
   dirname,
   isAbsolute,
   join,
-  resolve,
+  normalize,
 } from "https://deno.land/std@0.166.0/path/mod.ts";
 import {
   Denops,
@@ -183,8 +183,11 @@ export class Kind extends BaseKind<Params> {
       const params = args.actionParams as NarrowParams;
       if (params.path) {
         if (params.path == "..") {
-          const current = args.sourceOptions.path;
-          args.sourceOptions.path = resolve(join(current, ".."));
+          let current = args.sourceOptions.path;
+          if (current == "") {
+            current = await fn.getcwd(args.denops) as string;
+          }
+          args.sourceOptions.path = normalize(join(current, ".."));
           return {
             flags: ActionFlags.RefreshItems,
             searchPath: current,
