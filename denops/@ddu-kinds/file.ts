@@ -675,7 +675,7 @@ export class Kind extends BaseKind<Params> {
 
     return {
       kind: "buffer",
-      path: action.bufNr === undefined ? action.path : undefined,
+      path: action.bufNr ? undefined : action.path,
       expr: action.bufNr,
       lineNr: action.lineNr,
     };
