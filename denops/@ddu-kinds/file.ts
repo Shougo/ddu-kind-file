@@ -9,22 +9,22 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.0.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v2.7.1/types.ts";
 import {
   basename,
   dirname,
   isAbsolute,
   join,
   normalize,
-} from "https://deno.land/std@0.166.0/path/mod.ts";
+} from "https://deno.land/std@0.183.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v2.0.0/deps.ts";
-import { copy, move } from "https://deno.land/std@0.166.0/fs/mod.ts";
+} from "https://deno.land/x/ddu_vim@v2.7.1/deps.ts";
+import { copy, move } from "https://deno.land/std@0.183.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -333,6 +333,7 @@ export class Kind extends BaseKind<Params> {
           );
         }
 
+        const mode = await fn.mode(args.denops);
         if (action.lineNr != null) {
           await fn.cursor(args.denops, action.lineNr, 0);
 
@@ -340,12 +341,17 @@ export class Kind extends BaseKind<Params> {
             // Search the input text
             const text = (await fn.getline(args.denops, ".")).toLowerCase();
             const input = args.context.input.toLowerCase();
-            await fn.cursor(args.denops, 0, text.indexOf(input) + 1);
+            await fn.cursor(
+              args.denops,
+              0,
+              text.indexOf(input) + 1 + (mode == "i" ? 1 : 0),
+            );
           }
         }
 
         if (action.col != null) {
-          await fn.cursor(args.denops, 0, action.col);
+          // If it is insert mode, it needs adjust.
+          await fn.cursor(args.denops, 0, action.col + (mode == "i" ? 1 : 0));
         }
 
         // Note: Open folds and centering
