@@ -128,7 +128,10 @@ rename						      *ddu-kind-action-rename*
 trash
 		Move the file or directory to the trash.
 		It uses |ddu-kind-file-param-trashCommand|.
+
 		Note: It cannot |ddu-kind-file-action-undo|.
+		If you need undo the action, you need to move the files from
+		trash manually.
 
 						*ddu-kind-file-action-undo*
 undo
