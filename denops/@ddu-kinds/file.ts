@@ -1,6 +1,6 @@
 import {
-  ActionHistory,
   ActionFlags,
+  ActionHistory,
   Actions,
   BaseKind,
   Clipboard,
@@ -101,7 +101,12 @@ export class Kind extends BaseKind<Params> {
       return ActionFlags.Persist;
     },
     delete: async (
-      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions, actionHistory: ActionHistory },
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
     ) => {
       const message = `Are you sure you want to delete ${
         args.items.length > 1
@@ -390,67 +395,70 @@ export class Kind extends BaseKind<Params> {
 
       let searchPath = "";
       let defaultConfirm = "";
-      if (args.clipboard.action == "copy") {
-        for (const item of args.clipboard.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
+      switch (args.clipboard.action) {
+        case "copy":
+          for (const item of args.clipboard.items) {
+            const action = item?.action as ActionData;
+            const path = action.path ?? item.word;
 
-          const ret = await checkOverwrite(
-            args.denops,
-            path,
-            join(cwd, basename(path)),
-            defaultConfirm,
+            const ret = await checkOverwrite(
+              args.denops,
+              path,
+              join(cwd, basename(path)),
+              defaultConfirm,
+            );
+            const dest = ret.dest;
+            defaultConfirm = ret.defaultConfirm;
+            if (dest == "") {
+              continue;
+            }
+
+            await Deno.mkdir(dirname(dest), { recursive: true });
+
+            // Cannot overwrite files
+            if (await exists(dest)) {
+              await Deno.remove(dest, { recursive: true });
+            }
+
+            await copy(path, dest, { overwrite: true });
+
+            searchPath = dest;
+          }
+          break;
+        case "move":
+          for (const item of args.clipboard.items) {
+            const action = item?.action as ActionData;
+            const path = action.path ?? item.word;
+            const ret = await checkOverwrite(
+              args.denops,
+              path,
+              join(cwd, basename(path)),
+              defaultConfirm,
+            );
+            const dest = ret.dest;
+            defaultConfirm = ret.defaultConfirm;
+            if (dest == "") {
+              continue;
+            }
+
+            await Deno.mkdir(dirname(dest), { recursive: true });
+
+            // Cannot overwrite files
+            if (await exists(dest)) {
+              await Deno.remove(dest, { recursive: true });
+            }
+
+            await move(path, join(cwd, basename(path)));
+
+            searchPath = dest;
+          }
+          break;
+        default:
+          await args.denops.call(
+            "ddu#kind#file#print",
+            `Invalid action: ${args.clipboard.action}`,
           );
-          const dest = ret.dest;
-          defaultConfirm = ret.defaultConfirm;
-          if (dest == "") {
-            continue;
-          }
-
-          await Deno.mkdir(dirname(dest), { recursive: true });
-
-          // Cannot overwrite files
-          if (await exists(dest)) {
-            await Deno.remove(dest, { recursive: true });
-          }
-
-          await copy(path, dest, { overwrite: true });
-
-          searchPath = dest;
-        }
-      } else if (args.clipboard.action == "move") {
-        for (const item of args.clipboard.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
-          const ret = await checkOverwrite(
-            args.denops,
-            path,
-            join(cwd, basename(path)),
-            defaultConfirm,
-          );
-          const dest = ret.dest;
-          defaultConfirm = ret.defaultConfirm;
-          if (dest == "") {
-            continue;
-          }
-
-          await Deno.mkdir(dirname(dest), { recursive: true });
-
-          // Cannot overwrite files
-          if (await exists(dest)) {
-            await Deno.remove(dest, { recursive: true });
-          }
-
-          await move(path, join(cwd, basename(path)));
-
-          searchPath = dest;
-        }
-      } else {
-        await args.denops.call(
-          "ddu#kind#file#print",
-          `Invalid action: ${args.clipboard.action}`,
-        );
-        return ActionFlags.Persist;
+          return ActionFlags.Persist;
       }
 
       if (searchPath == "") {
@@ -890,6 +898,9 @@ const checkOverwrite = async (
         dest,
         (await isDirectory(src)) ? "dir" : "file",
       ) as string;
+      if (ret == dest) {
+        ret = "";
+      }
       break;
     case "t":
       if (dStat.mtime && sStat.mtime && dStat.mtime < sStat.mtime) {
