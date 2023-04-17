@@ -1,4 +1,5 @@
 import {
+  ActionHistory,
   ActionFlags,
   Actions,
   BaseKind,
@@ -9,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.7.1/types.ts";
+} from "https://deno.land/x/ddu_vim@v2.8.0/types.ts";
 import {
   basename,
   dirname,
@@ -23,7 +24,7 @@ import {
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v2.7.1/deps.ts";
+} from "https://deno.land/x/ddu_vim@v2.8.0/deps.ts";
 import { copy, move } from "https://deno.land/std@0.183.0/fs/mod.ts";
 
 export type ActionData = {
@@ -247,7 +248,12 @@ export class Kind extends BaseKind<Params> {
       };
     },
     newFile: async (
-      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
     ) => {
       const cwd = await getTargetDirectory(
         args.denops,
@@ -289,12 +295,16 @@ export class Kind extends BaseKind<Params> {
 
       if (newFile == "") {
         return ActionFlags.Persist;
-      } else {
-        return {
-          flags: ActionFlags.RefreshItems,
-          searchPath: newFile,
-        };
       }
+
+      args.actionHistory.action = "newFile";
+      args.actionHistory.items = [];
+      args.actionHistory.dest = newFile;
+
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath: newFile,
+      };
     },
     open: async (args: {
       denops: Denops;
@@ -457,6 +467,32 @@ export class Kind extends BaseKind<Params> {
       }
 
       return ActionFlags.None;
+    },
+    undo: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory,
+      },
+    ) => {
+      if (args.actionHistory.action == "newFile") {
+        await Deno.remove(args.actionHistory.dest, { recursive: true });
+
+        // Clear
+        args.actionHistory.action = "";
+        args.actionHistory.items = [];
+        args.actionHistory.dest = "";
+
+        return ActionFlags.RefreshItems;
+      } else if (args.actionHistory.action != "") {
+        await args.denops.call(
+          "ddu#kind#file#print",
+          `Cannot undo action: ${args.actionHistory.action}`,
+        );
+      }
+
+      return ActionFlags.Persist;
     },
     yank: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
