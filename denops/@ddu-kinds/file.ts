@@ -219,7 +219,12 @@ export class Kind extends BaseKind<Params> {
       return ActionFlags.None;
     },
     newDirectory: async (
-      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
     ) => {
       const cwd = await getTargetDirectory(
         args.denops,
@@ -250,6 +255,10 @@ export class Kind extends BaseKind<Params> {
       }
 
       await Deno.mkdir(newDirectory, { recursive: true });
+
+      args.actionHistory.action = "newDirectory";
+      args.actionHistory.items = [];
+      args.actionHistory.dest = newDirectory;
 
       return {
         flags: ActionFlags.RefreshItems,
@@ -385,6 +394,7 @@ export class Kind extends BaseKind<Params> {
         items: DduItem[];
         sourceOptions: SourceOptions;
         clipboard: Clipboard;
+        actionHistory: ActionHistory;
       },
     ) => {
       const cwd = await getTargetDirectory(
@@ -480,53 +490,12 @@ export class Kind extends BaseKind<Params> {
 
       return ActionFlags.None;
     },
-    undo: async (
-      args: {
-        denops: Denops;
-        items: DduItem[];
-        sourceOptions: SourceOptions;
-        actionHistory: ActionHistory;
-      },
-    ) => {
-      if (args.actionHistory.action == "newFile") {
-        await Deno.remove(args.actionHistory.dest, { recursive: true });
-
-        // Clear
-        args.actionHistory.action = "";
-        args.actionHistory.items = [];
-        args.actionHistory.dest = "";
-
-        return ActionFlags.RefreshItems;
-      } else if (args.actionHistory.action != "") {
-        await args.denops.call(
-          "ddu#kind#file#print",
-          `Cannot undo action: ${args.actionHistory.action}`,
-        );
-      }
-
-      return ActionFlags.Persist;
-    },
-    yank: async (args: { denops: Denops; items: DduItem[] }) => {
-      for (const item of args.items) {
-        const action = item?.action as ActionData;
-        const path = action.path ?? item.word;
-
-        await fn.setreg(args.denops, '"', path, "v");
-        await fn.setreg(
-          args.denops,
-          await vars.v.get(args.denops, "register"),
-          path,
-          "v",
-        );
-      }
-
-      return ActionFlags.Persist;
-    },
     rename: async (args: {
       denops: Denops;
       options: DduOptions;
       items: DduItem[];
       sourceOptions: SourceOptions;
+      actionHistory: ActionHistory;
     }) => {
       if (args.items.length > 1) {
         // Use exrename instead
@@ -584,6 +553,10 @@ export class Kind extends BaseKind<Params> {
           await fn.bufnr(args.denops, path),
           newPath,
         );
+
+        args.actionHistory.action = "rename";
+        args.actionHistory.items = args.items;
+        args.actionHistory.dest = newPath;
       }
 
       return {
@@ -657,6 +630,65 @@ export class Kind extends BaseKind<Params> {
       args.actionHistory.dest = "";
 
       return ActionFlags.RefreshItems;
+    },
+    undo: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      let searchPath = "";
+
+      switch (args.actionHistory.action) {
+        case "newDirectory":
+        case "newFile":
+          await Deno.remove(args.actionHistory.dest, { recursive: true });
+          break;
+        case "rename":
+          await move(
+            args.actionHistory.dest,
+            getPath(args.actionHistory.items[0]),
+          );
+          searchPath = getPath(args.actionHistory.items[0]);
+          break;
+        default:
+          if (args.actionHistory.action != "") {
+            await args.denops.call(
+              "ddu#kind#file#print",
+              `Cannot undo action: ${args.actionHistory.action}`,
+            );
+          }
+
+          return ActionFlags.Persist;
+      }
+
+      // Clear
+      args.actionHistory.action = "";
+      args.actionHistory.items = [];
+      args.actionHistory.dest = "";
+
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath,
+      };
+    },
+    yank: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+
+        await fn.setreg(args.denops, '"', path, "v");
+        await fn.setreg(
+          args.denops,
+          await vars.v.get(args.denops, "register"),
+          path,
+          "v",
+        );
+      }
+
+      return ActionFlags.Persist;
     },
   };
 
