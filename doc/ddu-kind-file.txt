@@ -58,6 +58,7 @@ copy
 						*ddu-kind-file-action-delete*
 delete
 		Delete the file or directory.
+		Note: It cannot |ddu-kind-file-action-undo|.
 
 					*ddu-kind-file-action-executeSystem*
 executeSystem
@@ -127,6 +128,7 @@ rename						      *ddu-kind-action-rename*
 trash
 		Move the file or directory to the trash.
 		It uses |ddu-kind-file-param-trashCommand|.
+		Note: It cannot |ddu-kind-file-action-undo|.
 
 						*ddu-kind-file-action-undo*
 undo

@@ -101,7 +101,7 @@ export class Kind extends BaseKind<Params> {
       return ActionFlags.Persist;
     },
     delete: async (
-      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },
+      args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions, actionHistory: ActionHistory },
     ) => {
       const message = `Are you sure you want to delete ${
         args.items.length > 1
@@ -122,6 +122,10 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         await Deno.remove(getPath(item), { recursive: true });
       }
+
+      args.actionHistory.action = "delete";
+      args.actionHistory.items = args.items;
+      args.actionHistory.dest = "";
 
       return ActionFlags.RefreshItems;
     },
@@ -473,7 +477,7 @@ export class Kind extends BaseKind<Params> {
         denops: Denops;
         items: DduItem[];
         sourceOptions: SourceOptions;
-        actionHistory: ActionHistory,
+        actionHistory: ActionHistory;
       },
     ) => {
       if (args.actionHistory.action == "newFile") {
@@ -585,6 +589,7 @@ export class Kind extends BaseKind<Params> {
         items: DduItem[];
         sourceOptions: SourceOptions;
         kindParams: Params;
+        actionHistory: ActionHistory;
       },
     ) => {
       const message = `Are you sure you want to move to the trash ${
@@ -638,6 +643,10 @@ export class Kind extends BaseKind<Params> {
           }
         }
       }
+
+      args.actionHistory.action = "trash";
+      args.actionHistory.items = args.items;
+      args.actionHistory.dest = "";
 
       return ActionFlags.RefreshItems;
     },
