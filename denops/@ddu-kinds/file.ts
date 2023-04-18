@@ -17,7 +17,7 @@ import {
   isAbsolute,
   join,
   normalize,
-} from "https://deno.land/std@0.183.0/path/mod.ts";
+} from "https://deno.land/std@0.184.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
@@ -25,7 +25,7 @@ import {
   op,
   vars,
 } from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
-import { copy, move } from "https://deno.land/std@0.183.0/fs/mod.ts";
+import { copy, move } from "https://deno.land/std@0.184.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
