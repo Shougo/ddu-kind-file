@@ -407,6 +407,7 @@ export class Kind extends BaseKind<Params> {
 
       let searchPath = "";
       let defaultConfirm = "";
+      args.actionHistory.actions = [];
       switch (args.clipboard.action) {
         case "copy":
           for (const item of args.clipboard.items) {
@@ -435,6 +436,12 @@ export class Kind extends BaseKind<Params> {
             await copy(path, dest, { overwrite: true });
 
             searchPath = dest;
+
+            args.actionHistory.actions.push({
+              name: "copy",
+              item,
+              dest,
+            });
           }
           break;
         case "move":
@@ -460,9 +467,15 @@ export class Kind extends BaseKind<Params> {
               await Deno.remove(dest, { recursive: true });
             }
 
-            await move(path, join(cwd, basename(path)));
+            await move(path, dest);
 
             searchPath = dest;
+
+            args.actionHistory.actions.push({
+              name: "move",
+              item,
+              dest,
+            });
           }
           break;
         default:
@@ -648,14 +661,16 @@ export class Kind extends BaseKind<Params> {
     ) => {
       let searchPath = "";
 
-      for (const action of args.actionHistory.actions) {
+      for (const action of args.actionHistory.actions.reverse()) {
         switch (action.name) {
+          case "copy":
           case "newDirectory":
           case "newFile":
             if (action.dest) {
               await Deno.remove(action.dest, { recursive: true });
             }
             break;
+          case "move":
           case "rename":
             if (action.dest && action.item) {
               await move(
@@ -670,7 +685,6 @@ export class Kind extends BaseKind<Params> {
               "ddu#kind#file#print",
               `Cannot undo action: ${action.name}`,
             );
-
             return ActionFlags.Persist;
         }
       }
