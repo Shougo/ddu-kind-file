@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.8.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
 import {
   basename,
   dirname,
@@ -24,7 +24,7 @@ import {
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v2.8.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
 import { copy, move } from "https://deno.land/std@0.183.0/fs/mod.ts";
 
 export type ActionData = {
@@ -124,13 +124,14 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
+      args.actionHistory.actions = [];
       for (const item of args.items) {
         await Deno.remove(getPath(item), { recursive: true });
+        args.actionHistory.actions.push({
+          name: "delete",
+          item,
+        });
       }
-
-      args.actionHistory.action = "delete";
-      args.actionHistory.items = args.items;
-      args.actionHistory.dest = "";
 
       return ActionFlags.RefreshItems;
     },
@@ -255,10 +256,10 @@ export class Kind extends BaseKind<Params> {
       }
 
       await Deno.mkdir(newDirectory, { recursive: true });
-
-      args.actionHistory.action = "newDirectory";
-      args.actionHistory.items = [];
-      args.actionHistory.dest = newDirectory;
+      args.actionHistory.actions = [{
+        name: "newDirectory",
+        dest: newDirectory,
+      }];
 
       return {
         flags: ActionFlags.RefreshItems,
@@ -315,9 +316,10 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
-      args.actionHistory.action = "newFile";
-      args.actionHistory.items = [];
-      args.actionHistory.dest = newFile;
+      args.actionHistory.actions = [{
+        name: "newFile",
+        dest: newFile,
+      }];
 
       return {
         flags: ActionFlags.RefreshItems,
@@ -519,6 +521,7 @@ export class Kind extends BaseKind<Params> {
       }
 
       let newPath = "";
+      args.actionHistory.actions = [];
       for (const item of args.items) {
         const action = item?.action as ActionData;
         const path = action.path ?? item.word;
@@ -554,9 +557,11 @@ export class Kind extends BaseKind<Params> {
           newPath,
         );
 
-        args.actionHistory.action = "rename";
-        args.actionHistory.items = args.items;
-        args.actionHistory.dest = newPath;
+        args.actionHistory.actions.push({
+          name: "rename",
+          item,
+          dest: newPath,
+        });
       }
 
       return {
@@ -599,6 +604,7 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
+      args.actionHistory.actions = [];
       for (const item of args.items) {
         const cmd = Array.from(trashCommand);
         cmd.push(getPath(item));
@@ -623,11 +629,12 @@ export class Kind extends BaseKind<Params> {
             );
           }
         }
-      }
 
-      args.actionHistory.action = "trash";
-      args.actionHistory.items = args.items;
-      args.actionHistory.dest = "";
+        args.actionHistory.actions.push({
+          name: "trash",
+          item,
+        });
+      }
 
       return ActionFlags.RefreshItems;
     },
@@ -641,33 +648,35 @@ export class Kind extends BaseKind<Params> {
     ) => {
       let searchPath = "";
 
-      switch (args.actionHistory.action) {
-        case "newDirectory":
-        case "newFile":
-          await Deno.remove(args.actionHistory.dest, { recursive: true });
-          break;
-        case "rename":
-          await move(
-            args.actionHistory.dest,
-            getPath(args.actionHistory.items[0]),
-          );
-          searchPath = getPath(args.actionHistory.items[0]);
-          break;
-        default:
-          if (args.actionHistory.action != "") {
+      for (const action of args.actionHistory.actions) {
+        switch (action.name) {
+          case "newDirectory":
+          case "newFile":
+            if (action.dest) {
+              await Deno.remove(action.dest, { recursive: true });
+            }
+            break;
+          case "rename":
+            if (action.dest && action.item) {
+              await move(
+                action.dest,
+                getPath(action.item),
+              );
+              searchPath = getPath(action.item);
+            }
+            break;
+          default:
             await args.denops.call(
               "ddu#kind#file#print",
-              `Cannot undo action: ${args.actionHistory.action}`,
+              `Cannot undo action: ${action.name}`,
             );
-          }
 
-          return ActionFlags.Persist;
+            return ActionFlags.Persist;
+        }
       }
 
       // Clear
-      args.actionHistory.action = "";
-      args.actionHistory.items = [];
-      args.actionHistory.dest = "";
+      args.actionHistory.actions = [];
 
       return {
         flags: ActionFlags.RefreshItems,
