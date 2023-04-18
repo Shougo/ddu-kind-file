@@ -139,6 +139,7 @@ trash
 undo
 		Undo the previous action.
 		Note: It can undo only the supported actions.
+		Note: It cannot |ddu-kind-file-action-undo|.
 
 				    	*ddu-kind-file-action-yank*
 yank
