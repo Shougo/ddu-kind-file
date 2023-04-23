@@ -25,7 +25,12 @@ import {
   op,
   vars,
 } from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
-import { copy, move } from "https://deno.land/std@0.184.0/fs/mod.ts";
+import {
+  copy,
+  ensureDir,
+  ensureFile,
+  move,
+} from "https://deno.land/std@0.184.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -259,7 +264,7 @@ export class Kind extends BaseKind<Params> {
           return ActionFlags.Persist;
         }
 
-        await Deno.mkdir(newDirectory, { recursive: true });
+        await ensureDir(newDirectory);
 
         args.actionHistory.actions.push({
           name: "newDirectory",
@@ -317,9 +322,9 @@ export class Kind extends BaseKind<Params> {
         }
 
         if (newFile.slice(-1) == "/") {
-          await Deno.mkdir(newFile, { recursive: true });
+          await ensureDir(newFile);
         } else {
-          await Deno.writeTextFile(newFile, "");
+          await ensureFile(newFile);
         }
 
         args.actionHistory.actions.push({
@@ -1006,7 +1011,7 @@ const safeAction = async (
     src = temp;
   }
 
-  await Deno.mkdir(dirname(dest), { recursive: true });
+  await ensureDir(dirname(dest));
 
   switch (action) {
     case "rename":
