@@ -428,9 +428,13 @@ export class Kind extends BaseKind<Params> {
 
             await Deno.mkdir(dirname(dest), { recursive: true });
 
-            // Cannot overwrite files
+            // Exists check
             if (await exists(dest)) {
-              await Deno.remove(dest, { recursive: true });
+              await args.denops.call(
+                "ddu#kind#file#print",
+                `${dest} already exists.`,
+              );
+              continue;
             }
 
             await copy(path, dest, { overwrite: true });
@@ -462,9 +466,13 @@ export class Kind extends BaseKind<Params> {
 
             await Deno.mkdir(dirname(dest), { recursive: true });
 
-            // Cannot overwrite files
+            // Exists check
             if (await exists(dest)) {
-              await Deno.remove(dest, { recursive: true });
+              await args.denops.call(
+                "ddu#kind#file#print",
+                `${dest} already exists.`,
+              );
+              continue;
             }
 
             await move(path, dest);
