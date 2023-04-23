@@ -236,7 +236,7 @@ export class Kind extends BaseKind<Params> {
       const input = await args.denops.call(
         "ddu#kind#file#cwd_input",
         cwd,
-        "Please input a new directory name: ",
+        "Please input directory names(comma separated): ",
         "",
         "dir",
       ) as string;
@@ -244,22 +244,32 @@ export class Kind extends BaseKind<Params> {
         return ActionFlags.Persist;
       }
 
-      const newDirectory = isAbsolute(input) ? input : join(cwd, input);
+      let newDirectory = "";
 
-      // Exists check
-      if (await exists(newDirectory)) {
-        await args.denops.call(
-          "ddu#kind#file#print",
-          `${newDirectory} already exists.`,
-        );
-        return ActionFlags.Persist;
+      args.actionHistory.actions = [];
+      for (const name of input.split(",")) {
+        newDirectory = isAbsolute(name) ? name : join(cwd, name);
+
+        // Exists check
+        if (await exists(newDirectory)) {
+          await args.denops.call(
+            "ddu#kind#file#print",
+            `${newDirectory} already exists.`,
+          );
+          return ActionFlags.Persist;
+        }
+
+        await Deno.mkdir(newDirectory, { recursive: true });
+
+        args.actionHistory.actions.push({
+          name: "newDirectory",
+          dest: newDirectory,
+        });
       }
 
-      await Deno.mkdir(newDirectory, { recursive: true });
-      args.actionHistory.actions = [{
-        name: "newDirectory",
-        dest: newDirectory,
-      }];
+      if (newDirectory == "") {
+        return ActionFlags.Persist;
+      }
 
       return {
         flags: ActionFlags.RefreshItems,
@@ -293,6 +303,7 @@ export class Kind extends BaseKind<Params> {
 
       let newFile = "";
 
+      args.actionHistory.actions = [];
       for (const name of input.split(",")) {
         newFile = isAbsolute(name) ? name : join(cwd, name);
 
@@ -310,16 +321,16 @@ export class Kind extends BaseKind<Params> {
         } else {
           await Deno.writeTextFile(newFile, "");
         }
+
+        args.actionHistory.actions.push({
+          name: "newFile",
+          dest: newFile,
+        });
       }
 
       if (newFile == "") {
         return ActionFlags.Persist;
       }
-
-      args.actionHistory.actions = [{
-        name: "newFile",
-        dest: newFile,
-      }];
 
       return {
         flags: ActionFlags.RefreshItems,
@@ -426,18 +437,7 @@ export class Kind extends BaseKind<Params> {
               continue;
             }
 
-            await Deno.mkdir(dirname(dest), { recursive: true });
-
-            // Exists check
-            if (await exists(dest)) {
-              await args.denops.call(
-                "ddu#kind#file#print",
-                `${dest} already exists.`,
-              );
-              continue;
-            }
-
-            await copy(path, dest, { overwrite: true });
+            await safeAction("copy", path, dest);
 
             searchPath = dest;
 
@@ -464,18 +464,7 @@ export class Kind extends BaseKind<Params> {
               continue;
             }
 
-            await Deno.mkdir(dirname(dest), { recursive: true });
-
-            // Exists check
-            if (await exists(dest)) {
-              await args.denops.call(
-                "ddu#kind#file#print",
-                `${dest} already exists.`,
-              );
-              continue;
-            }
-
-            await move(path, dest);
+            await safeAction("move", path, dest);
 
             searchPath = dest;
 
@@ -559,18 +548,7 @@ export class Kind extends BaseKind<Params> {
           continue;
         }
 
-        // Exists check
-        if (await exists(newPath)) {
-          await args.denops.call(
-            "ddu#kind#file#print",
-            `${newPath} already exists.`,
-          );
-          return ActionFlags.Persist;
-        }
-
-        await Deno.mkdir(dirname(newPath), { recursive: true });
-
-        await Deno.rename(path, newPath);
+        await safeAction("rename", path, newPath);
 
         await args.denops.call(
           "ddu#kind#file#buffer_rename",
@@ -672,6 +650,7 @@ export class Kind extends BaseKind<Params> {
       for (const action of args.actionHistory.actions.reverse()) {
         switch (action.name) {
           case "copy":
+          case "link":
           case "newDirectory":
           case "newFile":
             if (action.dest) {
@@ -1008,4 +987,36 @@ const feedkeys = async (denops: Denops, item: DduItem) => {
 
   // Use feedkeys() instead
   await fn.feedkeys(denops, action.path, "n");
+};
+
+const safeAction = async (
+  action: "rename" | "move" | "copy",
+  src: string,
+  dest: string,
+) => {
+  // Exists check
+  if (await exists(dest)) {
+    // NOTE: "src" may be same with "dest".  Rename is needed.
+    const temp = src + "___";
+
+    await Deno.rename(src, temp);
+
+    await Deno.remove(dest, { recursive: true });
+
+    src = temp;
+  }
+
+  await Deno.mkdir(dirname(dest), { recursive: true });
+
+  switch (action) {
+    case "rename":
+      await Deno.rename(src, dest);
+      break;
+    case "move":
+      await move(src, dest);
+      break;
+    case "copy":
+      await copy(src, dest, { overwrite: true });
+      break;
+  }
 };

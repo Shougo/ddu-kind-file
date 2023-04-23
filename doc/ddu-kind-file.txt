@@ -95,6 +95,8 @@ narrow
 newDirectory
 		Make new directory in expanded directory tree or current
 		directory.
+		If the input is comma separated, multiple directories are
+		created.
 
 						*ddu-kind-file-action-newFile*
 newFile
