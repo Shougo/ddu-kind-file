@@ -73,6 +73,10 @@ feedkeys
 insert
 		Paste the path like |P|.
 
+						*ddu-kind-file-action-link*
+link
+		Create symbolic link the selected files to ddu clipboard.
+
 						*ddu-kind-file-action-loclist*
 loclist
 		Set the |location-list| and open the |location-list| window.

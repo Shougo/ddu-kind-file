@@ -173,6 +173,23 @@ export class Kind extends BaseKind<Params> {
 
       return ActionFlags.None;
     },
+    link: async (
+      args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
+    ) => {
+      const message = `Link to the clipboard: ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }`;
+
+      await args.denops.call("ddu#kind#file#print", message);
+
+      args.clipboard.action = "link";
+      args.clipboard.items = args.items;
+      args.clipboard.mode = "";
+
+      return ActionFlags.Persist;
+    },
     move: async (
       args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
     ) => {
@@ -448,6 +465,43 @@ export class Kind extends BaseKind<Params> {
 
             args.actionHistory.actions.push({
               name: "copy",
+              item,
+              dest,
+            });
+          }
+          break;
+        case "link":
+          for (const item of args.clipboard.items) {
+            const action = item?.action as ActionData;
+            const path = action.path ?? item.word;
+
+            const ret = await checkOverwrite(
+              args.denops,
+              path,
+              join(cwd, basename(path)),
+              defaultConfirm,
+            );
+            const dest = ret.dest;
+            defaultConfirm = ret.defaultConfirm;
+            if (dest == "") {
+              continue;
+            }
+
+            // Exists check
+            if (await exists(dest)) {
+              await args.denops.call(
+                "ddu#kind#file#print",
+                `${dest} already exists.`,
+              );
+              return ActionFlags.Persist;
+            }
+
+            await Deno.symlink(path, dest);
+
+            searchPath = dest;
+
+            args.actionHistory.actions.push({
+              name: "link",
               item,
               dest,
             });
