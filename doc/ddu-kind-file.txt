@@ -75,7 +75,16 @@ insert
 
 						*ddu-kind-file-action-link*
 link
-		Create symbolic link the selected files to ddu clipboard.
+		Create link the selected files to ddu clipboard.
+
+		params:
+			{mode}:		create link mode.
+
+			"hard":      Create hard link.
+			"relative":  Create relative symbolic link from
+			             destination parent.
+			"absolute":  Create absolute symbolic link.
+			default:     Create symbolic link.
 
 						*ddu-kind-file-action-loclist*
 loclist

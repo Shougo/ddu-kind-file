@@ -17,6 +17,7 @@ import {
   isAbsolute,
   join,
   normalize,
+  relative,
 } from "https://deno.land/std@0.184.0/path/mod.ts";
 import {
   Denops,
@@ -52,6 +53,10 @@ type NarrowParams = {
 
 type OpenParams = {
   command: string;
+};
+
+type LinkParams = {
+  mode: "hard" | "absolute" | "relative";
 };
 
 type QuickFix = {
@@ -173,9 +178,14 @@ export class Kind extends BaseKind<Params> {
 
       return ActionFlags.None;
     },
-    link: async (
-      args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
-    ) => {
+    link: async (args: {
+      denops: Denops;
+      actionParams: unknown;
+      items: DduItem[];
+      clipboard: Clipboard;
+    }) => {
+      const params = args.actionParams as LinkParams;
+      const mode = params.mode ?? "absolute";
       const message = `Link to the clipboard: ${
         args.items.length > 1
           ? args.items.length + " files"
@@ -186,7 +196,7 @@ export class Kind extends BaseKind<Params> {
 
       args.clipboard.action = "link";
       args.clipboard.items = args.items;
-      args.clipboard.mode = "";
+      args.clipboard.mode = mode;
 
       return ActionFlags.Persist;
     },
@@ -496,7 +506,27 @@ export class Kind extends BaseKind<Params> {
               return ActionFlags.Persist;
             }
 
-            await Deno.symlink(path, dest);
+            switch (args.clipboard.mode) {
+              case "hard":
+                await Deno.link(path, dest);
+                break;
+              case "absolute":
+                await Deno.symlink(path, dest, {
+                  type: await isDirectory(path) ? "dir" : "file",
+                });
+                break;
+              case "relative":
+                await Deno.symlink(relative(path, dirname(dest)), dest, {
+                  type: await isDirectory(path) ? "dir" : "file",
+                });
+                break;
+              default:
+                await args.denops.call(
+                  "ddu#kind#file#print",
+                  `Invalid mode: ${args.clipboard.mode}`,
+                );
+                return ActionFlags.Persist;
+            }
 
             searchPath = dest;
 
@@ -919,6 +949,19 @@ const getDirectory = async (item: DduItem) => {
   return "";
 };
 
+const isDirectory = async (path: string) => {
+  // Note: Deno.stat() may be failed
+  try {
+    if ((await Deno.stat(path)).isDirectory) {
+      return true;
+    }
+  } catch (_e: unknown) {
+    // Ignore
+  }
+
+  return false;
+};
+
 const getPath = (item: DduItem) => {
   const action = item?.action as ActionData;
   return action.path ?? item.word;
@@ -931,18 +974,6 @@ const exists = async (path: string) => {
     if (stat.isDirectory || stat.isFile || stat.isSymlink) {
       return true;
     }
-  } catch (_: unknown) {
-    // Ignore stat exception
-  }
-
-  return false;
-};
-
-const isDirectory = async (path: string) => {
-  // Note: Deno.stat() may be failed
-  try {
-    const stat = await Deno.stat(path);
-    return stat.isDirectory;
   } catch (_: unknown) {
     // Ignore stat exception
   }
