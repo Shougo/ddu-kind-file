@@ -1091,7 +1091,10 @@ const safeAction = async (
 
     await Deno.rename(src, temp);
 
-    await Deno.remove(dest, { recursive: true });
+    // NOTE: if src == dest, it may be not exists
+    if (await exists(dest)) {
+      await Deno.remove(dest, { recursive: true });
+    }
 
     src = temp;
   }
