@@ -843,7 +843,7 @@ export class Kind extends BaseKind<Params> {
           contents: ["Error", e.toString()],
           highlights: [{
             name: "ddu-kind-file-error",
-            "hl_group": "Error",
+            hl_group: "Error",
             row: 1,
             col: 1,
             width: 5,
