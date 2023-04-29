@@ -18,7 +18,7 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.184.0/path/mod.ts";
+} from "https://deno.land/std@0.185.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
@@ -31,7 +31,7 @@ import {
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.184.0/fs/mod.ts";
+} from "https://deno.land/std@0.185.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -697,13 +697,12 @@ export class Kind extends BaseKind<Params> {
         const cmd = Array.from(trashCommand);
         cmd.push(getPath(item));
         try {
-          const p = Deno.run({
-            cmd,
-            stdout: "piped",
-            stderr: "piped",
-            stdin: "piped",
-          });
-          await p.status();
+          const command = new Deno.Command(
+            cmd[0], {
+              args: cmd.slice(1),
+            }
+          );
+          await command.output();
         } catch (e) {
           await args.denops.call(
             "ddu#util#print_error",
