@@ -1084,7 +1084,7 @@ const safeAction = async (
   dest: string,
 ) => {
   // Exists check
-  if (await exists(dest)) {
+  if (action != "copy" && await exists(dest)) {
     // NOTE: "src" may be same with "dest".  Rename is needed.
     const temp = src + "___";
 
