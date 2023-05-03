@@ -82,10 +82,10 @@ export class Kind extends BaseKind<Params> {
     cd: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
         const dir = await getDirectory(item);
-        if (dir != "") {
+        if (dir !== "") {
           const filetype = await op.filetype.getLocal(args.denops);
           await args.denops.call(
-            filetype == "deol" ? "deol#cd" : "chdir",
+            filetype === "deol" ? "deol#cd" : "chdir",
             dir,
           );
         }
@@ -130,7 +130,7 @@ export class Kind extends BaseKind<Params> {
         "&Yes\n&No\n&Cancel",
         2,
       ) as number;
-      if (confirm != 1) {
+      if (confirm !== 1) {
         return ActionFlags.Persist;
       }
 
@@ -171,7 +171,7 @@ export class Kind extends BaseKind<Params> {
     loclist: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
 
-      if (qfloclist.length != 0) {
+      if (qfloclist.length !== 0) {
         await fn.setloclist(args.denops, 0, qfloclist, " ");
         await args.denops.cmd("lopen");
       }
@@ -225,9 +225,9 @@ export class Kind extends BaseKind<Params> {
     }) => {
       const params = args.actionParams as NarrowParams;
       if (params.path) {
-        if (params.path == "..") {
+        if (params.path === "..") {
           let current = args.sourceOptions.path;
-          if (current == "") {
+          if (current === "") {
             current = await fn.getcwd(args.denops) as string;
           }
           args.sourceOptions.path = normalize(join(current, ".."));
@@ -243,7 +243,7 @@ export class Kind extends BaseKind<Params> {
 
       for (const item of args.items) {
         const dir = await getDirectory(item);
-        if (dir != "") {
+        if (dir !== "") {
           args.sourceOptions.path = dir;
           return ActionFlags.RefreshItems;
         }
@@ -272,7 +272,7 @@ export class Kind extends BaseKind<Params> {
         "",
         "dir",
       ) as string;
-      if (input == "") {
+      if (input === "") {
         return ActionFlags.Persist;
       }
 
@@ -299,7 +299,7 @@ export class Kind extends BaseKind<Params> {
         });
       }
 
-      if (newDirectory == "") {
+      if (newDirectory === "") {
         return ActionFlags.Persist;
       }
 
@@ -329,7 +329,7 @@ export class Kind extends BaseKind<Params> {
         "",
         "file",
       ) as string;
-      if (input == "") {
+      if (input === "") {
         return ActionFlags.Persist;
       }
 
@@ -348,7 +348,7 @@ export class Kind extends BaseKind<Params> {
           continue;
         }
 
-        if (newFile.slice(-1) == "/") {
+        if (newFile.slice(-1) === "/") {
           await ensureDir(newFile);
         } else {
           await ensureFile(newFile);
@@ -360,7 +360,7 @@ export class Kind extends BaseKind<Params> {
         });
       }
 
-      if (newFile == "") {
+      if (newFile === "") {
         return ActionFlags.Persist;
       }
 
@@ -381,8 +381,8 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         const action = item?.action as ActionData;
 
-        if (action.bufNr != null) {
-          if (openCommand != "edit") {
+        if (action.bufNr !== undefined) {
+          if (openCommand !== "edit") {
             await args.denops.call(
               "ddu#util#execute_path",
               openCommand,
@@ -407,24 +407,24 @@ export class Kind extends BaseKind<Params> {
         }
 
         const mode = await fn.mode(args.denops);
-        if (action.lineNr != null) {
+        if (action.lineNr !== undefined) {
           await fn.cursor(args.denops, action.lineNr, 0);
 
-          if (args.context.input != "") {
+          if (args.context.input !== "") {
             // Search the input text
             const text = (await fn.getline(args.denops, ".")).toLowerCase();
             const input = args.context.input.toLowerCase();
             await fn.cursor(
               args.denops,
               0,
-              text.indexOf(input) + 1 + (mode == "i" ? 1 : 0),
+              text.indexOf(input) + 1 + (mode === "i" ? 1 : 0),
             );
           }
         }
 
-        if (action.col != null) {
+        if (action.col !== undefined) {
           // If it is insert mode, it needs adjust.
-          await fn.cursor(args.denops, 0, action.col + (mode == "i" ? 1 : 0));
+          await fn.cursor(args.denops, 0, action.col + (mode === "i" ? 1 : 0));
         }
 
         // Note: Open folds and centering
@@ -465,7 +465,7 @@ export class Kind extends BaseKind<Params> {
             );
             const dest = ret.dest;
             defaultConfirm = ret.defaultConfirm;
-            if (dest == "") {
+            if (dest === "") {
               continue;
             }
 
@@ -493,7 +493,7 @@ export class Kind extends BaseKind<Params> {
             );
             const dest = ret.dest;
             defaultConfirm = ret.defaultConfirm;
-            if (dest == "") {
+            if (dest === "") {
               continue;
             }
 
@@ -549,7 +549,7 @@ export class Kind extends BaseKind<Params> {
             );
             const dest = ret.dest;
             defaultConfirm = ret.defaultConfirm;
-            if (dest == "") {
+            if (dest === "") {
               continue;
             }
 
@@ -572,7 +572,7 @@ export class Kind extends BaseKind<Params> {
           return ActionFlags.Persist;
       }
 
-      if (searchPath == "") {
+      if (searchPath === "") {
         return ActionFlags.Persist;
       } else {
         return {
@@ -584,7 +584,7 @@ export class Kind extends BaseKind<Params> {
     quickfix: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
 
-      if (qfloclist.length != 0) {
+      if (qfloclist.length !== 0) {
         await fn.setqflist(args.denops, qfloclist, " ");
         await args.denops.cmd("copen");
       }
@@ -615,7 +615,7 @@ export class Kind extends BaseKind<Params> {
       }
 
       let cwd = args.sourceOptions.path;
-      if (cwd == "") {
+      if (cwd === "") {
         cwd = await fn.getcwd(args.denops) as string;
       }
 
@@ -633,7 +633,7 @@ export class Kind extends BaseKind<Params> {
           (await isDirectory(path)) ? "dir" : "file",
         ) as string;
 
-        if (newPath == "" || path == newPath) {
+        if (newPath === "" || path === newPath) {
           continue;
         }
 
@@ -678,7 +678,7 @@ export class Kind extends BaseKind<Params> {
         "&Yes\n&No\n&Cancel",
         2,
       ) as number;
-      if (confirm != 1) {
+      if (confirm !== 1) {
         return ActionFlags.Persist;
       }
 
@@ -698,9 +698,10 @@ export class Kind extends BaseKind<Params> {
         cmd.push(getPath(item));
         try {
           const command = new Deno.Command(
-            cmd[0], {
+            cmd[0],
+            {
               args: cmd.slice(1),
-            }
+            },
           );
           await command.output();
         } catch (e) {
@@ -922,7 +923,7 @@ const getTargetDirectory = async (
     dir = item.__expanded ? path : dirname(path);
   }
 
-  if (dir == "") {
+  if (dir === "") {
     dir = await fn.getcwd(denops) as string;
   }
 
@@ -1005,7 +1006,7 @@ const checkOverwrite = async (
 
   // NOTE: Uppercase defaultConfirm skips user input
   const confirm =
-    (defaultConfirm != "" && defaultConfirm.toLowerCase() != defaultConfirm)
+    (defaultConfirm !== "" && defaultConfirm.toLowerCase() !== defaultConfirm)
       ? defaultConfirm
       : await denops.call(
         "ddu#kind#file#check_overwrite_method",
@@ -1029,7 +1030,7 @@ const checkOverwrite = async (
         dest,
         (await isDirectory(src)) ? "dir" : "file",
       ) as string;
-      if (ret == dest) {
+      if (ret === dest) {
         ret = "";
       }
       break;
@@ -1049,7 +1050,7 @@ const checkOverwrite = async (
 const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
   const action = item?.action as ActionData;
 
-  if (action.path == null) {
+  if (action.path === null) {
     return;
   }
 
@@ -1070,7 +1071,7 @@ const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
 const feedkeys = async (denops: Denops, item: DduItem) => {
   const action = item?.action as ActionData;
 
-  if (action.path == null) {
+  if (action.path === null) {
     return;
   }
 
@@ -1084,13 +1085,13 @@ const safeAction = async (
   dest: string,
 ) => {
   // Exists check
-  if (action != "copy" && await exists(dest)) {
+  if (action !== "copy" && await exists(dest)) {
     // NOTE: "src" may be same with "dest".  Rename is needed.
     const temp = src + "___";
 
     await Deno.rename(src, temp);
 
-    // NOTE: if src == dest, it may be not exists
+    // NOTE: if src === dest, it may be not exists
     if (await exists(dest)) {
       await Deno.remove(dest, { recursive: true });
     }
