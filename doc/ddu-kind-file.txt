@@ -97,6 +97,11 @@ move
 						*ddu-kind-file-action-narrow*
 narrow
 		Change |ddu-source-option-path| to the directory.
+		Note: If you select multiple files, it will start "file"
+		source.
+
+		NOTE: "ddu-source-file" is required.
+		https://github.com/Shougo/ddu-source-file
 
 		params:
 			{path}:		narrowing path.

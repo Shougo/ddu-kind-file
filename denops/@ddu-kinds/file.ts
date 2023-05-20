@@ -219,6 +219,7 @@ export class Kind extends BaseKind<Params> {
     },
     narrow: async (args: {
       denops: Denops;
+      options: DduOptions;
       actionParams: unknown;
       sourceOptions: SourceOptions;
       items: DduItem[];
@@ -241,12 +242,28 @@ export class Kind extends BaseKind<Params> {
         }
       }
 
-      for (const item of args.items) {
-        const dir = await getDirectory(item);
-        if (dir !== "") {
-          args.sourceOptions.path = dir;
-          return ActionFlags.RefreshItems;
-        }
+      if (args.items.length > 1) {
+        await args.denops.call("ddu#start", {
+          name: args.options.name,
+          push: true,
+          sources: await Promise.all(args.items.map(async (item) => {
+            return {
+              name: "file",
+              options: {
+                columns: args.sourceOptions.columns,
+                path: await getDirectory(item),
+              },
+            };
+          })),
+        });
+
+        return ActionFlags.None;
+      }
+
+      const dir = await getDirectory(args.items[0]);
+      if (dir !== "") {
+        args.sourceOptions.path = dir;
+        return ActionFlags.RefreshItems;
       }
 
       return ActionFlags.None;
