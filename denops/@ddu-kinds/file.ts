@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.8.5/types.ts";
+} from "https://deno.land/x/ddu_vim@v2.9.0/types.ts";
 import {
   basename,
   dirname,
@@ -18,20 +18,20 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.188.0/path/mod.ts";
+} from "https://deno.land/std@0.177.1/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v2.8.5/deps.ts";
+} from "https://deno.land/x/ddu_vim@v2.9.0/deps.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.188.0/fs/mod.ts";
+} from "https://deno.land/std@0.177.1/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
