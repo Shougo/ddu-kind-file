@@ -397,8 +397,10 @@ export class Kind extends BaseKind<Params> {
 
       for (const item of args.items) {
         const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+        const bufNr = action.bufNr ?? await fn.bufnr(args.denops, path);
 
-        if (action.bufNr !== undefined) {
+        if (bufNr >= 0) {
           if (openCommand !== "edit") {
             await args.denops.call(
               "ddu#util#execute_path",
@@ -407,15 +409,13 @@ export class Kind extends BaseKind<Params> {
             );
           }
           // NOTE: bufNr may be hidden
-          await fn.bufload(args.denops, action.bufNr);
-          await args.denops.cmd(`buffer ${action.bufNr}`);
+          await fn.bufload(args.denops, bufNr);
+          await args.denops.cmd(`buffer ${bufNr}`);
+        } else if (new RegExp("^https?://").test(path)) {
+          // URL
+          await args.denops.call("ddu#kind#file#open", path);
+          continue;
         } else {
-          const path = action.path ?? item.word;
-          if (new RegExp("^https?://").test(path)) {
-            // URL
-            await args.denops.call("ddu#kind#file#open", path);
-            continue;
-          }
           await args.denops.call(
             "ddu#util#execute_path",
             openCommand,
