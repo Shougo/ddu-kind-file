@@ -400,7 +400,7 @@ export class Kind extends BaseKind<Params> {
         const path = action.path ?? item.word;
         const bufNr = action.bufNr ?? await fn.bufnr(args.denops, path);
 
-        if (bufNr > 0) {
+        if (bufNr >= 0) {
           if (openCommand !== "edit") {
             await args.denops.call(
               "ddu#util#execute_path",
