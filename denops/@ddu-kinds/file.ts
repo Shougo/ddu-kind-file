@@ -395,6 +395,9 @@ export class Kind extends BaseKind<Params> {
       const params = args.actionParams as OpenParams;
       const openCommand = params.command ?? "edit";
 
+      // Save current position.
+      await args.denops.cmd("normal! m`")
+
       for (const item of args.items) {
         const action = item?.action as ActionData;
         const path = action.path ?? item.word;
