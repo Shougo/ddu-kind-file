@@ -47,6 +47,10 @@ ACTIONS						*ddu-kind-file-actions*
 append
 		Paste the path like |p|.
 
+						*ddu-kind-file-action-browse*
+browse
+		Browse the URL.
+
 						*ddu-kind-file-action-cd*
 cd
 		Call |chdir()| the directory.
@@ -124,7 +128,10 @@ newFile
 
 						*ddu-kind-file-action-open*
 open
-		Open the files.
+		Open the items.
+		If the item is buffer, switch to the buffer.
+		If the item is URL, browse the URL.
+		If the item is file, open the file.
 
 		params:
 			{command}:	open command.

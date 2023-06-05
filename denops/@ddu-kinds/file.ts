@@ -41,6 +41,7 @@ export type ActionData = {
   lineNr?: number;
   path?: string;
   text?: string;
+  url?: string;
 };
 
 type Params = {
@@ -77,7 +78,21 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         await paste(args.denops, item, "p");
       }
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
+    },
+    browse: async (args: {
+      denops: Denops;
+      context: Context;
+      items: DduItem[];
+    }) => {
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        if (action.url) {
+          // URL
+          await args.denops.call("ddu#kind#file#open", action.url);
+        }
+      }
+      return ActionFlags.None;
     },
     cd: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
@@ -160,13 +175,13 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         await feedkeys(args.denops, item);
       }
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
     },
     insert: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
         await paste(args.denops, item, "P");
       }
-      return Promise.resolve(ActionFlags.None);
+      return ActionFlags.None;
     },
     loclist: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
@@ -411,12 +426,12 @@ export class Kind extends BaseKind<Params> {
               action.path ?? "",
             );
           }
-          // NOTE: bufNr may be hidden
+          // NOTE: "bufNr" may be hidden
           await fn.bufload(args.denops, bufNr);
           await args.denops.cmd(`buffer ${bufNr}`);
-        } else if (new RegExp("^https?://").test(path)) {
+        } else if (action.url) {
           // URL
-          await args.denops.call("ddu#kind#file#open", path);
+          await args.denops.call("ddu#kind#file#open", action.url);
           continue;
         } else {
           await args.denops.call(
@@ -796,7 +811,7 @@ export class Kind extends BaseKind<Params> {
     yank: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
         const action = item?.action as ActionData;
-        const path = action.path ?? item.word;
+        const path = action.path ?? action.url ?? item.word;
 
         await fn.setreg(args.denops, '"', path, "v");
         await fn.setreg(
