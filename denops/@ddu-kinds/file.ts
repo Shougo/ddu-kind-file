@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v2.9.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.0.1/types.ts";
 import {
   basename,
   dirname,
@@ -18,20 +18,20 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.177.1/path/mod.ts";
+} from "https://deno.land/std@0.191.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v2.9.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v3.0.1/deps.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.177.1/fs/mod.ts";
+} from "https://deno.land/std@0.191.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -411,12 +411,12 @@ export class Kind extends BaseKind<Params> {
       const openCommand = params.command ?? "edit";
 
       // Save current position.
-      await args.denops.cmd("normal! m`")
+      await args.denops.cmd("normal! m`");
 
       for (const item of args.items) {
         const action = item?.action as ActionData;
-        const path = action.path ?? item.word;
-        const bufNr = action.bufNr ?? await fn.bufnr(args.denops, path);
+        const bufNr = action.bufNr ??
+          await fn.bufnr(args.denops, action.path ?? item.word);
 
         if (bufNr >= 0) {
           if (openCommand !== "edit") {
@@ -429,16 +429,16 @@ export class Kind extends BaseKind<Params> {
           // NOTE: "bufNr" may be hidden
           await fn.bufload(args.denops, bufNr);
           await args.denops.cmd(`buffer ${bufNr}`);
+        } else if (action.path) {
+          await args.denops.call(
+            "ddu#util#execute_path",
+            openCommand,
+            action.path,
+          );
         } else if (action.url) {
           // URL
           await args.denops.call("ddu#kind#file#open", action.url);
           continue;
-        } else {
-          await args.denops.call(
-            "ddu#util#execute_path",
-            openCommand,
-            path,
-          );
         }
 
         const mode = await fn.mode(args.denops);
