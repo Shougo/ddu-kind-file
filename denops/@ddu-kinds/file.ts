@@ -10,8 +10,15 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-  TreePath,
-} from "https://deno.land/x/ddu_vim@v3.2.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.2.1/types.ts";
+import {
+  Denops,
+  ensureObject,
+  fn,
+  op,
+  vars,
+} from "https://deno.land/x/ddu_vim@v3.2.1/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.2.1/utils.ts";
 import {
   basename,
   dirname,
@@ -20,14 +27,6 @@ import {
   normalize,
   relative,
 } from "https://deno.land/std@0.192.0/path/mod.ts";
-import {
-  Denops,
-  ensureObject,
-  fn,
-  op,
-  pathsep,
-  vars,
-} from "https://deno.land/x/ddu_vim@v3.2.0/deps.ts";
 import {
   copy,
   ensureDir,
@@ -1082,10 +1081,6 @@ const checkOverwrite = async (
   }
 
   return { dest: ret, defaultConfirm: confirm };
-};
-
-const treePath2Filename = (treePath: TreePath) => {
-  return typeof treePath === "string" ? treePath : treePath.join(pathsep);
 };
 
 const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
