@@ -10,7 +10,8 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.0.1/types.ts";
+  TreePath,
+} from "https://deno.land/x/ddu_vim@v3.2.0/types.ts";
 import {
   basename,
   dirname,
@@ -18,20 +19,21 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.191.0/path/mod.ts";
+} from "https://deno.land/std@0.192.0/path/mod.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
+  pathsep,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.0.1/deps.ts";
+} from "https://deno.land/x/ddu_vim@v3.2.0/deps.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.191.0/fs/mod.ts";
+} from "https://deno.land/std@0.192.0/fs/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -242,7 +244,7 @@ export class Kind extends BaseKind<Params> {
       const params = args.actionParams as NarrowParams;
       if (params.path) {
         if (params.path === "..") {
-          let current = args.sourceOptions.path;
+          let current = treePath2Filename(args.sourceOptions.path);
           if (current === "") {
             current = await fn.getcwd(args.denops) as string;
           }
@@ -293,7 +295,7 @@ export class Kind extends BaseKind<Params> {
     ) => {
       const cwd = await getTargetDirectory(
         args.denops,
-        args.sourceOptions.path,
+        treePath2Filename(args.sourceOptions.path),
         args.items,
       );
 
@@ -350,7 +352,7 @@ export class Kind extends BaseKind<Params> {
     ) => {
       const cwd = await getTargetDirectory(
         args.denops,
-        args.sourceOptions.path,
+        treePath2Filename(args.sourceOptions.path),
         args.items,
       );
 
@@ -479,7 +481,7 @@ export class Kind extends BaseKind<Params> {
     ) => {
       const cwd = await getTargetDirectory(
         args.denops,
-        args.sourceOptions.path,
+        treePath2Filename(args.sourceOptions.path),
         args.items,
       );
 
@@ -1080,6 +1082,10 @@ const checkOverwrite = async (
   }
 
   return { dest: ret, defaultConfirm: confirm };
+};
+
+const treePath2Filename = (treePath: TreePath) => {
+  return typeof treePath === "string" ? treePath : treePath.join(pathsep);
 };
 
 const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
