@@ -13,8 +13,9 @@ import {
 } from "https://deno.land/x/ddu_vim@v3.2.7/types.ts";
 import {
   Denops,
-  ensureObject,
+  ensure,
   fn,
+  is,
   op,
   vars,
 } from "https://deno.land/x/ddu_vim@v3.2.7/deps.ts";
@@ -838,7 +839,7 @@ export class Kind extends BaseKind<Params> {
       return undefined;
     }
 
-    const param = ensureObject(args.actionParams) as PreviewOption;
+    const param = ensure(args.actionParams, is.Record) as PreviewOption;
 
     if (action.path && param.previewCmds?.length) {
       const previewHeight = args.previewContext.height;
