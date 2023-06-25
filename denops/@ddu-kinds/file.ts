@@ -10,15 +10,15 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.2.1/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.2.7/types.ts";
 import {
   Denops,
   ensureObject,
   fn,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.2.1/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.2.1/utils.ts";
+} from "https://deno.land/x/ddu_vim@v3.2.7/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.2.7/utils.ts";
 import {
   basename,
   dirname,
