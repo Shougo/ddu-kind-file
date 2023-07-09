@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.2.7/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.4.1/types.ts";
 import {
   Denops,
   ensure,
@@ -18,8 +18,8 @@ import {
   is,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.2.7/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.2.7/utils.ts";
+} from "https://deno.land/x/ddu_vim@v3.4.1/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.4.1/utils.ts";
 import {
   basename,
   dirname,
@@ -27,13 +27,14 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.192.0/path/mod.ts";
+} from "https://deno.land/std@0.193.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.192.0/fs/mod.ts";
+} from "https://deno.land/std@0.193.0/fs/mod.ts";
+import { readRange } from "https://deno.land/std@0.193.0/io/read_range.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -895,6 +896,24 @@ export class Kind extends BaseKind<Params> {
       };
     }
 
+    // Binary file check
+    if (action.path && await exists(action.path)) {
+      if (await isDirectory(action.path)) {
+        return {
+          kind: "nofile",
+          contents: [`${action.path} is directory`],
+        };
+      }
+
+      if (await isBinary(action.path)) {
+        // Binary file.
+        return {
+          kind: "nofile",
+          contents: [`${action.path} is binary file`],
+        };
+      }
+    }
+
     if (action.bufNr) {
       // NOTE: buffer may be hidden
       await fn.bufload(args.denops, action.bufNr);
@@ -986,19 +1005,6 @@ const getDirectory = async (item: DduItem) => {
   return "";
 };
 
-const isDirectory = async (path: string) => {
-  // Note: Deno.stat() may be failed
-  try {
-    if ((await Deno.stat(path)).isDirectory) {
-      return true;
-    }
-  } catch (_e: unknown) {
-    // Ignore
-  }
-
-  return false;
-};
-
 const getPath = (item: DduItem) => {
   const action = item?.action as ActionData;
   return action.path ?? item.word;
@@ -1016,6 +1022,33 @@ const exists = async (path: string) => {
   }
 
   return false;
+};
+
+const isDirectory = async (path: string) => {
+  // Note: Deno.stat() may be failed
+  try {
+    if ((await Deno.stat(path)).isDirectory) {
+      return true;
+    }
+  } catch (_e: unknown) {
+    // Ignore
+  }
+
+  return false;
+};
+
+const isBinary = async (path: string): Promise<boolean> => {
+  const stat = await Deno.stat(path);
+  const file = await Deno.open(path, { read: true });
+  const range = await readRange(file, {
+    start: 0,
+    end: Math.min(stat.size, 256) - 1,
+  });
+  const decoder = new TextDecoder("utf-8");
+  const text = decoder.decode(range);
+
+  // deno-lint-ignore no-control-regex
+  return text.match(/[\x00-\x08\x10-\x1a\x1c-\x1f]{2,}/) !== undefined;
 };
 
 const checkOverwrite = async (
