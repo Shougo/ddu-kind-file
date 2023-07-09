@@ -897,15 +897,16 @@ export class Kind extends BaseKind<Params> {
     }
 
     // Binary file check
-    if (action.path && await exists(action.path)) {
-      if (await isDirectory(action.path)) {
+    if (action.path) {
+      const stat = await safeStat(action.path);
+      if (stat && stat.isDirectory) {
         return {
           kind: "nofile",
           contents: [`${action.path} is directory`],
         };
       }
 
-      if (await isBinary(action.path)) {
+      if (stat && await isBinary(action.path, stat)) {
         // Binary file.
         return {
           kind: "nofile",
@@ -1010,6 +1011,17 @@ const getPath = (item: DduItem) => {
   return action.path ?? item.word;
 };
 
+const safeStat = async (path: string): Promise<Deno.FileInfo | null> => {
+  // Note: Deno.stat() may be failed
+  try {
+    const stat = await Deno.stat(path);
+    return stat;
+  } catch (_: unknown) {
+    // Ignore stat exception
+  }
+  return null;
+};
+
 const exists = async (path: string) => {
   // Note: Deno.stat() may be failed
   try {
@@ -1037,8 +1049,7 @@ const isDirectory = async (path: string) => {
   return false;
 };
 
-const isBinary = async (path: string): Promise<boolean> => {
-  const stat = await Deno.stat(path);
+const isBinary = async (path: string, stat: Deno.FileInfo): Promise<boolean> => {
   const file = await Deno.open(path, { read: true });
   const range = await readRange(file, {
     start: 0,
@@ -1048,7 +1059,7 @@ const isBinary = async (path: string): Promise<boolean> => {
   const text = decoder.decode(range);
 
   // deno-lint-ignore no-control-regex
-  return text.match(/[\x00-\x08\x10-\x1a\x1c-\x1f]{2,}/) !== undefined;
+  return text.match(/[\x00-\x08\x10-\x1a\x1c-\x1f]{2,}/) !== null;
 };
 
 const checkOverwrite = async (
@@ -1057,15 +1068,15 @@ const checkOverwrite = async (
   dest: string,
   defaultConfirm: string,
 ): Promise<{ dest: string; defaultConfirm: string }> => {
-  if (!(await exists(src))) {
+  const sStat = await safeStat(src);
+  const dStat = await safeStat(dest);
+
+  if (!sStat) {
     return { dest: "", defaultConfirm: "" };
   }
-  if (!(await exists(dest))) {
+  if (!dStat) {
     return { dest, defaultConfirm: "" };
   }
-
-  const sStat = await Deno.stat(src);
-  const dStat = await Deno.stat(dest);
 
   const message = ` src: ${src} ${sStat.size} bytes\n` +
     `      ${sStat.mtime?.toISOString()}\n` +
@@ -1098,7 +1109,7 @@ const checkOverwrite = async (
         "",
         `Please input a new name: ${dest} -> `,
         dest,
-        (await isDirectory(src)) ? "dir" : "file",
+        sStat.isDirectory ? "dir" : "file",
       ) as string;
       if (ret === dest) {
         ret = "";
