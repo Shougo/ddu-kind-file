@@ -1050,6 +1050,10 @@ const isDirectory = async (path: string) => {
 };
 
 const isBinary = async (path: string, stat: Deno.FileInfo): Promise<boolean> => {
+  if (!stat.isFile || stat.size === 0) {
+    return false;
+  }
+
   const file = await Deno.open(path, { read: true });
   const range = await readRange(file, {
     start: 0,
