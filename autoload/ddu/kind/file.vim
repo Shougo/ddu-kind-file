@@ -165,3 +165,8 @@ function! ddu#kind#file#buffer_delete(bufnr) abort
     execute 'silent! bdelete!' a:bufnr
   endif
 endfunction
+
+function! ddu#kind#file#bufnr(filename) abort
+  " NOTE: bufnr() may be wrong.  It returns submatched buffer number.
+  return bufexists(a:filename) ? bufnr(a:filename) : -1
+endfunction

@@ -419,7 +419,10 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         const action = item?.action as ActionData;
         const bufNr = action.bufNr ??
-          await fn.bufnr(args.denops, action.path ?? item.word);
+          await args.denops.call(
+            "ddu#kind#file#bufnr",
+            action.path ?? item.word,
+          ) as number;
 
         if (bufNr >= 0) {
           if (openCommand !== "edit") {
@@ -1049,7 +1052,10 @@ const isDirectory = async (path: string) => {
   return false;
 };
 
-const isBinary = async (path: string, stat: Deno.FileInfo): Promise<boolean> => {
+const isBinary = async (
+  path: string,
+  stat: Deno.FileInfo,
+): Promise<boolean> => {
   if (!stat.isFile || stat.size === 0) {
     return false;
   }
