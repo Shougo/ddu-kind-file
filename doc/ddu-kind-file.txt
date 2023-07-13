@@ -175,6 +175,12 @@ yank
 ==============================================================================
 PREVIEW PARAMS					*ddu-kind-file-preview-params*
 
+				*ddu-kind-file-preview-param-maxSize*
+maxSize		(number)
+		Max size of preview file.
+
+		Default: 500000
+
 				*ddu-kind-file-preview-param-previewCmds*
 previewCmds	(string[])
 		External commands to preview the file.

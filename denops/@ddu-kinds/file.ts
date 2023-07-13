@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.4.1/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.4.2/types.ts";
 import {
   Denops,
   ensure,
@@ -18,8 +18,8 @@ import {
   is,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.4.1/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.4.1/utils.ts";
+} from "https://deno.land/x/ddu_vim@v3.4.2/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.4.2/utils.ts";
 import {
   basename,
   dirname,
@@ -27,14 +27,14 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.193.0/path/mod.ts";
+} from "https://deno.land/std@0.194.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.193.0/fs/mod.ts";
-import { readRange } from "https://deno.land/std@0.193.0/io/read_range.ts";
+} from "https://deno.land/std@0.194.0/fs/mod.ts";
+import { readRange } from "https://deno.land/std@0.194.0/io/read_range.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -73,6 +73,7 @@ type QuickFix = {
 
 type PreviewOption = {
   previewCmds?: string[];
+  maxSize?: number;
 };
 
 export class Kind extends BaseKind<Params> {
@@ -899,13 +900,23 @@ export class Kind extends BaseKind<Params> {
       };
     }
 
-    // Binary file check
+    // File path check
     if (action.path) {
       const stat = await safeStat(action.path);
       if (stat && stat.isDirectory) {
+        // Directory.
         return {
           kind: "nofile",
           contents: [`${action.path} is directory`],
+        };
+      }
+
+      const maxSize = param.maxSize ?? 500000;
+      if (stat && stat.size > maxSize) {
+        // Over maxSize file.
+        return {
+          kind: "nofile",
+          contents: [`${action.path} is over maxSize.`],
         };
       }
 
