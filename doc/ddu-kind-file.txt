@@ -3,7 +3,7 @@
 Author: Shougo <Shougo.Matsu at gmail.com>
 License: MIT license
 
-CONTENTS					*ddu-kind-file-contents*
+CONTENTS                                              *ddu-kind-file-contents*
 
 Introduction		|ddu-kind-file-introduction|
 Install			|ddu-kind-file-install|
@@ -14,13 +14,13 @@ Params			|ddu-kind-file-params|
 
 
 ==============================================================================
-INTRODUCTION					*ddu-kind-file-introduction*
+INTRODUCTION                                      *ddu-kind-file-introduction*
 
 This kind implements file operations.
 
 
 ==============================================================================
-INSTALL						*ddu-kind-file-install*
+INSTALL                                                *ddu-kind-file-install*
 
 Please install both "ddu.vim" and "denops.vim".
 
@@ -29,7 +29,7 @@ https://github.com/vim-denops/denops.vim
 
 
 ==============================================================================
-EXAMPLES					*ddu-kind-file-examples*
+EXAMPLES                                              *ddu-kind-file-examples*
 >
 	call ddu#custom#patch_global(#{
 	    \   kindOptions: #{
@@ -41,43 +41,43 @@ EXAMPLES					*ddu-kind-file-examples*
 <
 
 ==============================================================================
-ACTIONS						*ddu-kind-file-actions*
+ACTIONS                                                *ddu-kind-file-actions*
 
-						*ddu-kind-file-action-append*
+                                                 *ddu-kind-file-action-append*
 append
 		Paste the path like |p|.
 
-						*ddu-kind-file-action-browse*
+                                                 *ddu-kind-file-action-browse*
 browse
 		Browse the URL.
 
-						*ddu-kind-file-action-cd*
+                                                     *ddu-kind-file-action-cd*
 cd
 		Call |chdir()| the directory.
 
-						*ddu-kind-file-action-copy*
+                                                   *ddu-kind-file-action-copy*
 copy
 		Copy the selected files to ddu clipboard.
 
-						*ddu-kind-file-action-delete*
+                                                 *ddu-kind-file-action-delete*
 delete
 		Delete the file or directory.
 		Note: It cannot |ddu-kind-file-action-undo|.
 
-					*ddu-kind-file-action-executeSystem*
+                                          *ddu-kind-file-action-executeSystem*
 executeSystem
 		Execute the file by system associated command.
 
-						*ddu-kind-file-action-feedkeys*
+                                               *ddu-kind-file-action-feedkeys*
 feedkeys
 		Use |feedkeys()| to insert the path.
 		It is useful in command line mode.
 
-						*ddu-kind-file-action-insert*
+                                                 *ddu-kind-file-action-insert*
 insert
 		Paste the path like |P|.
 
-						*ddu-kind-file-action-link*
+                                                   *ddu-kind-file-action-link*
 link
 		Create link the selected files to ddu clipboard.
 
@@ -90,15 +90,15 @@ link
 			"absolute":  Create absolute symbolic link.
 			default:     Create symbolic link.
 
-						*ddu-kind-file-action-loclist*
+                                                *ddu-kind-file-action-loclist*
 loclist
 		Set the |location-list| and open the |location-list| window.
 
-						*ddu-kind-file-action-move*
+                                                   *ddu-kind-file-action-move*
 move
 		Move the selected files to ddu clipboard.
 
-						*ddu-kind-file-action-narrow*
+                                                 *ddu-kind-file-action-narrow*
 narrow
 		Change |ddu-source-option-path| to the directory.
 		Note: If you select multiple files, it will start "file"
@@ -113,20 +113,20 @@ narrow
 					directory.
 					(Default: cursor/selected item's path)
 
-					*ddu-kind-file-action-newDirectory*
+                                           *ddu-kind-file-action-newDirectory*
 newDirectory
 		Make new directory in expanded directory tree or current
 		directory.
 		If the input is comma separated, multiple directories are
 		created.
 
-						*ddu-kind-file-action-newFile*
+                                                *ddu-kind-file-action-newFile*
 newFile
 		Make new file in expanded directory tree or current directory.
 		If the input ends with "/", it means new directory.
 		If the input is comma separated, multiple files are created.
 
-						*ddu-kind-file-action-open*
+                                                   *ddu-kind-file-action-open*
 open
 		Open the items.
 		If the item is buffer, switch to the buffer.
@@ -137,23 +137,23 @@ open
 			{command}:	open command.
 					(Default: "edit")
 
-paste						*ddu-kind-file-action-paste*
+paste                                             *ddu-kind-file-action-paste*
 		Fire the clipboard action in the current directory.
 		Note: It is used after |ddu-kind-file-action-copy| or
 		|ddu-kind-file-action-move|.
 
-				    	*ddu-kind-file-action-quickfix*
+                                               *ddu-kind-file-action-quickfix*
 quickfix
 		Set the |quickfix| list and open the |quickfix| window.
 
-rename						      *ddu-kind-action-rename*
+rename                                                *ddu-kind-action-rename*
 		Rename the file/directory under cursor or from selected list.
 		Note: If you select multiple files, it will be buffer-rename
 		mode.
 		Note: If you select multiple files, it cannot
 		|ddu-kind-file-action-undo|.
 
-						*ddu-kind-file-action-trash*
+                                                  *ddu-kind-file-action-trash*
 trash
 		Move the file or directory to the trash.
 		It uses |ddu-kind-file-param-trashCommand|.
@@ -162,26 +162,26 @@ trash
 		If you need undo the action, you need to move the files from
 		trash manually.
 
-						*ddu-kind-file-action-undo*
+                                                   *ddu-kind-file-action-undo*
 undo
 		Undo the previous action.
 		Note: It can undo only the supported actions.
 		Note: It cannot |ddu-kind-file-action-undo|.
 
-				    	*ddu-kind-file-action-yank*
+                                                   *ddu-kind-file-action-yank*
 yank
 		Yank the file path.
 
 ==============================================================================
 PREVIEW PARAMS					*ddu-kind-file-preview-params*
 
-				*ddu-kind-file-preview-param-maxSize*
+                                         *ddu-kind-file-preview-param-maxSize*
 maxSize		(number)
 		Max size of preview file.
 
 		Default: 500000
 
-				*ddu-kind-file-preview-param-previewCmds*
+                                     *ddu-kind-file-preview-param-previewCmds*
 previewCmds	(string[])
 		External commands to preview the file.
 		If it is not specified, normal buffer is used.
@@ -202,10 +202,11 @@ previewCmds	(string[])
 		Preview with "less" >
 		['less', '+%b', '%s']
 <
-==============================================================================
-PARAMS						*ddu-kind-file-params*
 
-					*ddu-kind-file-param-trashCommand*
+==============================================================================
+PARAMS                                                  *ddu-kind-file-params*
+
+                                            *ddu-kind-file-param-trashCommand*
 trashCommand	(string[])
 		Trash command.
 
