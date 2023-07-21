@@ -469,7 +469,7 @@ export class Kind extends BaseKind<Params> {
           await fn.cursor(args.denops, 0, action.col + (mode === "i" ? 1 : 0));
         }
 
-        // Note: Open folds and centering
+        // NOTE: Open folds and centering
         await args.denops.cmd("normal! zvzz");
       }
 
@@ -1004,7 +1004,7 @@ const getTargetDirectory = async (
 const getDirectory = async (item: DduItem) => {
   const action = item?.action as ActionData;
 
-  // Note: Deno.stat() may be failed
+  // NOTE: Deno.stat() may be failed
   try {
     const path = action.path ?? item.word;
     const dir = (action.isDirectory ?? (await Deno.stat(path)).isDirectory)
@@ -1026,7 +1026,7 @@ const getPath = (item: DduItem) => {
 };
 
 const safeStat = async (path: string): Promise<Deno.FileInfo | null> => {
-  // Note: Deno.stat() may be failed
+  // NOTE: Deno.stat() may be failed
   try {
     const stat = await Deno.stat(path);
     return stat;
@@ -1037,7 +1037,7 @@ const safeStat = async (path: string): Promise<Deno.FileInfo | null> => {
 };
 
 const exists = async (path: string) => {
-  // Note: Deno.stat() may be failed
+  // NOTE: Deno.stat() may be failed
   try {
     const stat = await Deno.stat(path);
     if (stat.isDirectory || stat.isFile || stat.isSymlink) {
@@ -1051,7 +1051,7 @@ const exists = async (path: string) => {
 };
 
 const isDirectory = async (path: string) => {
-  // Note: Deno.stat() may be failed
+  // NOTE: Deno.stat() may be failed
   try {
     if ((await Deno.stat(path)).isDirectory) {
       return true;
