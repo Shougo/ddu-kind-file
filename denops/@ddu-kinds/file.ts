@@ -784,8 +784,6 @@ export class Kind extends BaseKind<Params> {
           for await (const line of iterLine(proc.stdout)) {
             stdout.push(line);
           }
-
-          proc.kill();
         } catch (e) {
           await args.denops.call(
             "ddu#util#print_error",
