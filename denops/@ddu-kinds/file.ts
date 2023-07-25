@@ -35,6 +35,7 @@ import {
   move,
 } from "https://deno.land/std@0.195.0/fs/mod.ts";
 import { readRange } from "https://deno.land/std@0.195.0/io/read_range.ts";
+import { TextLineStream } from "https://deno.land/std@0.195.0/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -767,13 +768,22 @@ export class Kind extends BaseKind<Params> {
         const cmd = Array.from(trashCommand);
         cmd.push(getPath(item));
         try {
-          const command = new Deno.Command(
+          const proc = new Deno.Command(
             cmd[0],
             {
               args: cmd.slice(1),
+              stdout: "piped",
+              stderr: "piped",
+              stdin: "null",
             },
-          );
-          await command.output();
+          ).spawn();
+
+          // NOTE: Dummy get outputs
+          // In Vim, await command.output() does not work.
+          const stdout = [];
+          for await (const line of iterLine(proc.stdout)) {
+            stdout.push(line);
+          }
         } catch (e) {
           await args.denops.call(
             "ddu#util#print_error",
@@ -1243,3 +1253,18 @@ const safeAction = async (
       break;
   }
 };
+
+async function* iterLine(r: ReadableStream<Uint8Array>): AsyncIterable<string> {
+  const lines = r
+    .pipeThrough(new TextDecoderStream(), {
+      preventCancel: false,
+      preventClose: false,
+    })
+    .pipeThrough(new TextLineStream());
+
+  for await (const line of lines) {
+    if ((line as string).length) {
+      yield line as string;
+    }
+  }
+}
