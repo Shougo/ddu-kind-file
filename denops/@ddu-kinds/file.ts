@@ -55,6 +55,10 @@ type NarrowParams = {
   path: string;
 };
 
+type ExecuteParams = {
+  command: string;
+};
+
 type OpenParams = {
   command: string;
 };
@@ -163,6 +167,30 @@ export class Kind extends BaseKind<Params> {
       }
 
       return ActionFlags.RefreshItems;
+    },
+    execute: async (
+      args: {
+        denops: Denops;
+        actionParams: unknown;
+        items: DduItem[];
+        sourceOptions: SourceOptions,
+      },
+    ) => {
+      const params = args.actionParams as ExecuteParams;
+      const command = params.command ?? "edit";
+
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+
+        await args.denops.call(
+          "ddu#util#execute_path",
+          command,
+          path,
+        );
+      }
+
+      return ActionFlags.None;
     },
     executeSystem: async (
       args: { denops: Denops; items: DduItem[]; sourceOptions: SourceOptions },

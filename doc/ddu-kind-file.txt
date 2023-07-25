@@ -64,6 +64,14 @@ delete
 		Delete the file or directory.
 		Note: It cannot |ddu-kind-file-action-undo|.
 
+                                                *ddu-kind-file-action-execute*
+execute
+		Execute the file.
+
+		params:
+			{command}:	execute command.
+					(Default: "edit")
+
                                           *ddu-kind-file-action-executeSystem*
 executeSystem
 		Execute the file by system associated command.
@@ -173,7 +181,7 @@ yank
 		Yank the file path.
 
 ==============================================================================
-PREVIEW PARAMS					*ddu-kind-file-preview-params*
+PREVIEW PARAMS                                  *ddu-kind-file-preview-params*
 
                                          *ddu-kind-file-preview-param-maxSize*
 maxSize		(number)
