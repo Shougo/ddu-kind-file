@@ -767,36 +767,34 @@ export class Kind extends BaseKind<Params> {
       for (const item of args.items) {
         const cmd = Array.from(trashCommand);
         cmd.push(getPath(item));
-        try {
-          const proc = new Deno.Command(
-            cmd[0],
-            {
-              args: cmd.slice(1),
-              stdout: "piped",
-              stderr: "piped",
-              stdin: "null",
-            },
-          ).spawn();
+        const proc = new Deno.Command(
+          cmd[0],
+          {
+            args: cmd.slice(1),
+            stdout: "null",
+            stderr: "piped",
+            stdin: "null",
+          },
+        ).spawn();
 
-          // NOTE: Dummy get outputs
-          // In Vim, await command.output() does not work.
-          const stdout = [];
-          for await (const line of iterLine(proc.stdout)) {
-            stdout.push(line);
+        proc.status.then(async (s) => {
+          if (s.success) {
+            return;
           }
-        } catch (e) {
+
           await args.denops.call(
             "ddu#util#print_error",
-            `Run ${cmd} is failed.`,
+            `Run ${cmd} is failed with exit code ${s.code}.`,
           );
-
-          if (e instanceof Error) {
-            await args.denops.call(
-              "ddu#util#print_error",
-              e.message,
-            );
+          const err = [];
+          for await (const line of iterLine(proc.stderr)) {
+            err.push(line);
           }
-        }
+          await args.denops.call(
+            "ddu#util#print_error",
+            err.join("\n"),
+          );
+        });
 
         args.actionHistory.actions.push({
           name: "trash",
