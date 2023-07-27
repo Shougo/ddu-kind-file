@@ -1192,8 +1192,8 @@ const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
     return;
   }
 
-  const oldValue = fn.getreg(denops, '"');
-  const oldType = fn.getregtype(denops, '"');
+  const oldValue = await fn.getreg(denops, '"');
+  const oldType = await fn.getregtype(denops, '"');
 
   await fn.setreg(denops, '"', action.path, "v");
   try {
