@@ -1192,17 +1192,13 @@ const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
     return;
   }
 
-  const oldValue = await fn.getreg(denops, '"');
-  const oldType = await fn.getregtype(denops, '"');
+  const oldReg = await fn.getreginfo(denops, '"');
 
   await fn.setreg(denops, '"', action.path, "v");
   try {
     await denops.cmd('normal! ""' + pasteKey);
   } finally {
-    // NOTE: oldValue may be undefined
-    if (oldValue) {
-      await fn.setreg(denops, '"', oldValue, oldType);
-    }
+    await fn.setreg(denops, '"', oldReg);
   }
 
   // Open folds
