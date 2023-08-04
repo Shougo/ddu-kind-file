@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.4.3/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.4.5/types.ts";
 import {
   Denops,
   ensure,
@@ -18,8 +18,8 @@ import {
   is,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.4.3/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.4.3/utils.ts";
+} from "https://deno.land/x/ddu_vim@v3.4.5/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.4.5/utils.ts";
 import {
   basename,
   dirname,
@@ -27,15 +27,15 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.195.0/path/mod.ts";
+} from "https://deno.land/std@0.197.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.195.0/fs/mod.ts";
-import { readRange } from "https://deno.land/std@0.195.0/io/read_range.ts";
-import { TextLineStream } from "https://deno.land/std@0.195.0/streams/mod.ts";
+} from "https://deno.land/std@0.197.0/fs/mod.ts";
+import { readRange } from "https://deno.land/std@0.197.0/io/read_range.ts";
+import { TextLineStream } from "https://deno.land/std@0.197.0/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -462,9 +462,16 @@ export class Kind extends BaseKind<Params> {
               action.path ?? "",
             );
           }
+
           // NOTE: "bufNr" may be hidden
-          await fn.bufload(args.denops, bufNr);
+          const loaded = await fn.bufloaded(args.denops, bufNr);
+          if (!loaded) {
+            await fn.bufload(args.denops, bufNr);
+          }
           await args.denops.cmd(`buffer ${bufNr}`);
+          if (!loaded) {
+            await fn.setbufvar(args.denops, bufNr, "&buflisted", 1);
+          }
         } else if (action.path) {
           await args.denops.call(
             "ddu#util#execute_path",
