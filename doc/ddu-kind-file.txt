@@ -11,6 +11,7 @@ Examples		|ddu-kind-file-examples|
 Actions			|ddu-kind-file-actions|
 Preview params		|ddu-kind-file-preview-params|
 Params			|ddu-kind-file-params|
+Compatibility		|ddu-kind-file-compatibility|
 
 
 ==============================================================================
@@ -46,10 +47,6 @@ ACTIONS                                                *ddu-kind-file-actions*
                                                  *ddu-kind-file-action-append*
 append
 		Paste the path like |p|.
-
-                                                 *ddu-kind-file-action-browse*
-browse
-		Browse the URL.
 
                                                      *ddu-kind-file-action-cd*
 cd
@@ -138,7 +135,6 @@ newFile
 open
 		Open the items.
 		If the item is buffer, switch to the buffer.
-		If the item is URL, browse the URL.
 		If the item is file, open the file.
 
 		params:
@@ -219,6 +215,13 @@ trashCommand	(string[])
 		Trash command.
 
 		Default: ["gio", "trash"]
+
+
+==============================================================================
+COMPATIBILITY                                    *ddu-kind-file-compatibility*
+
+2023.09.14
+* Remove url support.  Please use "ddu-kind-url" instead.
 
 
 ==============================================================================

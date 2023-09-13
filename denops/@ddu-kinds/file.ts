@@ -27,15 +27,15 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.200.0/path/mod.ts";
+} from "https://deno.land/std@0.201.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.200.0/fs/mod.ts";
-import { readRange } from "https://deno.land/std@0.200.0/io/read_range.ts";
-import { TextLineStream } from "https://deno.land/std@0.200.0/streams/mod.ts";
+} from "https://deno.land/std@0.201.0/fs/mod.ts";
+import { readRange } from "https://deno.land/std@0.201.0/io/read_range.ts";
+import { TextLineStream } from "https://deno.land/std@0.201.0/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -45,7 +45,6 @@ export type ActionData = {
   lineNr?: number;
   path?: string;
   text?: string;
-  url?: string;
 };
 
 type Params = {
@@ -88,23 +87,6 @@ export class Kind extends BaseKind<Params> {
       callback: async (args: { denops: Denops; items: DduItem[] }) => {
         for (const item of args.items) {
           await paste(args.denops, item, "p");
-        }
-        return ActionFlags.None;
-      },
-    },
-    browse: {
-      description: "Browse the URL.",
-      callback: async (args: {
-        denops: Denops;
-        context: Context;
-        items: DduItem[];
-      }) => {
-        for (const item of args.items) {
-          const action = item?.action as ActionData;
-          if (action.url) {
-            // URL
-            await args.denops.call("ddu#kind#file#open", action.url);
-          }
         }
         return ActionFlags.None;
       },
@@ -489,7 +471,8 @@ export class Kind extends BaseKind<Params> {
     },
     open: {
       description:
-        "Open the items.\nIf the item is buffer, switch to the buffer.\nIf the item is URL, browse the URL.\nIf the item is file, open the file.",
+        "Open the items.\nIf the item is buffer, switch to the buffer.\n" +
+        "If the item is file, open the file.",
       callback: async (args: {
         denops: Denops;
         context: Context;
@@ -534,10 +517,6 @@ export class Kind extends BaseKind<Params> {
               openCommand,
               action.path,
             );
-          } else if (action.url) {
-            // URL
-            await args.denops.call("ddu#kind#file#open", action.url);
-            continue;
           }
 
           const mode = await fn.mode(args.denops);
@@ -940,7 +919,7 @@ export class Kind extends BaseKind<Params> {
       callback: async (args: { denops: Denops; items: DduItem[] }) => {
         for (const item of args.items) {
           const action = item?.action as ActionData;
-          const path = action.path ?? action.url ?? item.word;
+          const path = action.path ?? item.word;
 
           await fn.setreg(args.denops, '"', path, "v");
           await fn.setreg(
