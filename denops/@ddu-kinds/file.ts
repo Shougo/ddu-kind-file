@@ -47,6 +47,860 @@ export type ActionData = {
   text?: string;
 };
 
+export const FileActions: Actions<Params> = {
+  append: {
+    description: "Paste the path like |p|.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        await paste(args.denops, item, "p");
+      }
+      return ActionFlags.None;
+    },
+  },
+  cd: {
+    description: "Call |chdir()| the directory.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        const dir = await getDirectory(item);
+        if (dir !== "") {
+          const filetype = await op.filetype.getLocal(args.denops);
+          await args.denops.call(
+            filetype === "deol" ? "deol#cd" : "chdir",
+            dir,
+          );
+        }
+      }
+
+      return ActionFlags.None;
+    },
+  },
+  copy: {
+    description: "Copy the selected files to ddu clipboard.",
+    callback: async (
+      args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
+    ) => {
+      const message = `Copy to the clipboard: ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }`;
+
+      await args.denops.call("ddu#kind#file#print", message);
+
+      args.clipboard.action = "copy";
+      args.clipboard.items = args.items;
+      args.clipboard.mode = "";
+
+      return ActionFlags.Persist;
+    },
+  },
+  delete: {
+    description: "Delete the file or directory.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      const message = `Are you sure you want to delete ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }?`;
+
+      const confirm = await args.denops.call(
+        "ddu#kind#file#confirm",
+        message,
+        "&Yes\n&No\n&Cancel",
+        2,
+      ) as number;
+      if (confirm !== 1) {
+        return ActionFlags.Persist;
+      }
+
+      args.actionHistory.actions = [];
+      for (const item of args.items) {
+        await Deno.remove(getPath(item), { recursive: true });
+        args.actionHistory.actions.push({
+          name: "delete",
+          item,
+        });
+      }
+
+      return ActionFlags.RefreshItems;
+    },
+  },
+  execute: {
+    description: "Execute the file.",
+    callback: async (
+      args: {
+        denops: Denops;
+        actionParams: unknown;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+      },
+    ) => {
+      const params = args.actionParams as ExecuteParams;
+      const command = params.command ?? "edit";
+
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+
+        await args.denops.call(
+          "ddu#util#execute_path",
+          command,
+          path,
+        );
+      }
+
+      return ActionFlags.None;
+    },
+  },
+  executeSystem: {
+    description: "Execute the file by system associated command.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+      },
+    ) => {
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+        await args.denops.call("ddu#kind#file#open", path);
+      }
+
+      return ActionFlags.Persist;
+    },
+  },
+  feedkeys: {
+    description:
+      "Use |feedkeys()| to insert the path.\nIt is useful in command line mode.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        await feedkeys(args.denops, item);
+      }
+      return ActionFlags.None;
+    },
+  },
+  insert: {
+    description: "Paste the path like |P|.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        await paste(args.denops, item, "P");
+      }
+      return ActionFlags.None;
+    },
+  },
+  link: {
+    description: "Create link the selected files to ddu clipboard.",
+    callback: async (args: {
+      denops: Denops;
+      actionParams: unknown;
+      items: DduItem[];
+      clipboard: Clipboard;
+    }) => {
+      const params = args.actionParams as LinkParams;
+      const mode = params.mode ?? "absolute";
+      const message = `Link to the clipboard: ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }`;
+
+      await args.denops.call("ddu#kind#file#print", message);
+
+      args.clipboard.action = "link";
+      args.clipboard.items = args.items;
+      args.clipboard.mode = mode;
+
+      return ActionFlags.Persist;
+    },
+  },
+  loclist: {
+    description:
+      "Set the |location-list| and open the |location-list| window.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      const qfloclist: QuickFix[] = buildQfLocList(args.items);
+
+      if (qfloclist.length !== 0) {
+        await fn.setloclist(args.denops, 0, qfloclist, " ");
+        await args.denops.cmd("lopen");
+      }
+
+      return ActionFlags.None;
+    },
+  },
+  move: {
+    description: "Move the selected files to ddu clipboard.",
+    callback: async (
+      args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
+    ) => {
+      const message = `Move to the clipboard: ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }`;
+
+      await args.denops.call("ddu#kind#file#print", message);
+
+      args.clipboard.action = "move";
+      args.clipboard.items = args.items;
+      args.clipboard.mode = "";
+
+      return ActionFlags.Persist;
+    },
+  },
+  narrow: {
+    description: "Change |ddu-source-option-path| to the directory.",
+    callback: async (args: {
+      denops: Denops;
+      options: DduOptions;
+      actionParams: unknown;
+      sourceOptions: SourceOptions;
+      items: DduItem[];
+    }) => {
+      const params = args.actionParams as NarrowParams;
+      if (params.path) {
+        if (params.path === "..") {
+          let current = treePath2Filename(args.sourceOptions.path);
+          if (current === "") {
+            current = await fn.getcwd(args.denops) as string;
+          }
+          args.sourceOptions.path = normalize(join(current, ".."));
+          return {
+            flags: ActionFlags.RefreshItems,
+            searchPath: current,
+          };
+        } else {
+          args.sourceOptions.path = params.path;
+          return ActionFlags.RefreshItems;
+        }
+      }
+
+      if (args.items.length > 1) {
+        await args.denops.call("ddu#start", {
+          name: args.options.name,
+          push: true,
+          sources: await Promise.all(args.items.map(async (item) => {
+            return {
+              name: "file",
+              options: {
+                columns: args.sourceOptions.columns,
+                path: await getDirectory(item),
+              },
+            };
+          })),
+        });
+
+        return ActionFlags.None;
+      }
+
+      const dir = await getDirectory(args.items[0]);
+      if (dir !== "") {
+        args.sourceOptions.path = dir;
+        return ActionFlags.RefreshItems;
+      }
+
+      return ActionFlags.None;
+    },
+  },
+  newDirectory: {
+    description:
+      "Make new directory in expanded directory tree or current directory.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      const cwd = await getTargetDirectory(
+        args.denops,
+        treePath2Filename(args.sourceOptions.path),
+        args.items,
+      );
+
+      const input = await args.denops.call(
+        "ddu#kind#file#cwd_input",
+        cwd,
+        "Please input directory names(comma separated): ",
+        "",
+        "dir",
+      ) as string;
+      if (input === "") {
+        return ActionFlags.Persist;
+      }
+
+      let newDirectory = "";
+
+      args.actionHistory.actions = [];
+      for (const name of input.split(",")) {
+        newDirectory = isAbsolute(name) ? name : join(cwd, name);
+
+        // Exists check
+        if (await exists(newDirectory)) {
+          await args.denops.call(
+            "ddu#kind#file#print",
+            `${newDirectory} already exists.`,
+          );
+          return ActionFlags.Persist;
+        }
+
+        await ensureDir(newDirectory);
+
+        args.actionHistory.actions.push({
+          name: "newDirectory",
+          dest: newDirectory,
+        });
+      }
+
+      if (newDirectory === "") {
+        return ActionFlags.Persist;
+      }
+
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath: newDirectory,
+      };
+    },
+  },
+  newFile: {
+    description:
+      "Make new file in expanded directory tree or current directory.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      const cwd = await getTargetDirectory(
+        args.denops,
+        treePath2Filename(args.sourceOptions.path),
+        args.items,
+      );
+
+      const input = await args.denops.call(
+        "ddu#kind#file#cwd_input",
+        cwd,
+        "Please input names(comma separated): ",
+        "",
+        "file",
+      ) as string;
+      if (input === "") {
+        return ActionFlags.Persist;
+      }
+
+      let newFile = "";
+
+      args.actionHistory.actions = [];
+      for (const name of input.split(",")) {
+        newFile = isAbsolute(name) ? name : join(cwd, name);
+
+        // Exists check
+        if (await exists(newFile)) {
+          await args.denops.call(
+            "ddu#kind#file#print",
+            `${newFile} already exists.`,
+          );
+          continue;
+        }
+
+        if (newFile.slice(-1) === "/") {
+          await ensureDir(newFile);
+        } else {
+          await ensureFile(newFile);
+        }
+
+        args.actionHistory.actions.push({
+          name: "newFile",
+          dest: newFile,
+        });
+      }
+
+      if (newFile === "") {
+        return ActionFlags.Persist;
+      }
+
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath: newFile,
+      };
+    },
+  },
+  open: {
+    description:
+      "Open the items.\nIf the item is buffer, switch to the buffer.\n" +
+      "If the item is file, open the file.",
+    callback: async (args: {
+      denops: Denops;
+      context: Context;
+      actionParams: unknown;
+      items: DduItem[];
+    }) => {
+      const params = args.actionParams as OpenParams;
+      const openCommand = params.command ?? "edit";
+
+      // Save current position.
+      await args.denops.cmd("normal! m`");
+
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const bufNr = action.bufNr ??
+          await args.denops.call(
+            "ddu#kind#file#bufnr",
+            action.path ?? item.word,
+        ) as number;
+
+        if (bufNr >= 0) {
+          if (openCommand !== "edit") {
+            await args.denops.call(
+              "ddu#util#execute_path",
+              openCommand,
+              action.path ?? "",
+            );
+          }
+
+          // NOTE: "bufNr" may be hidden
+          const loaded = await fn.bufloaded(args.denops, bufNr);
+          if (!loaded) {
+            await fn.bufload(args.denops, bufNr);
+          }
+          await args.denops.cmd(`buffer ${bufNr}`);
+          if (!loaded) {
+            await fn.setbufvar(args.denops, bufNr, "&buflisted", 1);
+          }
+        } else if (action.path) {
+          await args.denops.call(
+            "ddu#util#execute_path",
+            openCommand,
+            action.path,
+          );
+        }
+
+        const mode = await fn.mode(args.denops);
+        if (action.lineNr !== undefined) {
+          await fn.cursor(args.denops, action.lineNr, 0);
+
+          if (args.context.input !== "") {
+            // Search the input text
+            const text = (await fn.getline(args.denops, ".")).toLowerCase();
+            const input = args.context.input.toLowerCase();
+            await fn.cursor(
+              args.denops,
+              0,
+              text.indexOf(input) + 1 + (mode === "i" ? 1 : 0),
+            );
+          }
+        }
+
+        if (action.col !== undefined) {
+          // If it is insert mode, it needs adjust.
+          await fn.cursor(
+            args.denops,
+            0,
+            action.col + (mode === "i" ? 1 : 0),
+          );
+        }
+
+        // NOTE: Open folds and centering
+        await args.denops.cmd("normal! zvzz");
+      }
+
+      return ActionFlags.None;
+    },
+  },
+  paste: {
+    description: "Fire the clipboard action in the current directory.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        clipboard: Clipboard;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      const cwd = await getTargetDirectory(
+        args.denops,
+        treePath2Filename(args.sourceOptions.path),
+        args.items,
+      );
+
+      let searchPath = "";
+      let defaultConfirm = "";
+      args.actionHistory.actions = [];
+      switch (args.clipboard.action) {
+        case "copy":
+          for (const item of args.clipboard.items) {
+          const action = item?.action as ActionData;
+          const path = action.path ?? item.word;
+
+          const ret = await checkOverwrite(
+            args.denops,
+            path,
+            join(cwd, basename(path)),
+            defaultConfirm,
+          );
+          const dest = ret.dest;
+          defaultConfirm = ret.defaultConfirm;
+          if (dest === "") {
+            continue;
+          }
+
+          await safeAction("copy", path, dest);
+
+          searchPath = dest;
+
+          args.actionHistory.actions.push({
+            name: "copy",
+            item,
+            dest,
+          });
+        }
+        break;
+        case "link":
+          for (const item of args.clipboard.items) {
+          const action = item?.action as ActionData;
+          const path = action.path ?? item.word;
+
+          const ret = await checkOverwrite(
+            args.denops,
+            path,
+            join(cwd, basename(path)),
+            defaultConfirm,
+          );
+          const dest = ret.dest;
+          defaultConfirm = ret.defaultConfirm;
+          if (dest === "") {
+            continue;
+          }
+
+          // Exists check
+          if (await exists(dest)) {
+            await args.denops.call(
+              "ddu#kind#file#print",
+              `${dest} already exists.`,
+            );
+            return ActionFlags.Persist;
+          }
+
+          switch (args.clipboard.mode) {
+            case "hard":
+              await Deno.link(path, dest);
+            break;
+            case "absolute":
+              await Deno.symlink(path, dest, {
+              type: await isDirectory(path) ? "dir" : "file",
+            });
+            break;
+            case "relative":
+              await Deno.symlink(relative(path, dirname(dest)), dest, {
+              type: await isDirectory(path) ? "dir" : "file",
+            });
+            break;
+            default:
+              await args.denops.call(
+                "ddu#kind#file#print",
+                `Invalid mode: ${args.clipboard.mode}`,
+            );
+            return ActionFlags.Persist;
+          }
+
+          searchPath = dest;
+
+          args.actionHistory.actions.push({
+            name: "link",
+            item,
+            dest,
+          });
+        }
+        break;
+        case "move":
+          for (const item of args.clipboard.items) {
+          const action = item?.action as ActionData;
+          const path = action.path ?? item.word;
+          const ret = await checkOverwrite(
+            args.denops,
+            path,
+            join(cwd, basename(path)),
+            defaultConfirm,
+          );
+          const dest = ret.dest;
+          defaultConfirm = ret.defaultConfirm;
+          if (dest === "") {
+            continue;
+          }
+
+          await safeAction("move", path, dest);
+
+          searchPath = dest;
+
+          args.actionHistory.actions.push({
+            name: "move",
+            item,
+            dest,
+          });
+        }
+        break;
+        default:
+          await args.denops.call(
+            "ddu#kind#file#print",
+            `Invalid action: ${args.clipboard.action}`,
+        );
+        return ActionFlags.Persist;
+      }
+
+      if (searchPath === "") {
+        return ActionFlags.Persist;
+      } else {
+        return {
+          flags: ActionFlags.RefreshItems,
+          searchPath,
+        };
+      }
+    },
+  },
+  quickfix: {
+    description: "Set the |quickfix| list and open the |quickfix| window.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      const qfloclist: QuickFix[] = buildQfLocList(args.items);
+
+      if (qfloclist.length !== 0) {
+        await fn.setqflist(args.denops, qfloclist, " ");
+        await args.denops.cmd("copen");
+      }
+
+      return ActionFlags.None;
+    },
+  },
+  rename: {
+    description:
+      "Rename the file/directory under cursor or from selected list.",
+    callback: async (args: {
+      denops: Denops;
+      options: DduOptions;
+      items: DduItem[];
+      sourceOptions: SourceOptions;
+      actionHistory: ActionHistory;
+    }) => {
+      if (args.items.length > 1) {
+        // Use exrename instead
+        await args.denops.call(
+          "ddu#kind#file#exrename#create_buffer",
+          args.items.map((item) => {
+            return {
+              action__path: (item?.action as ActionData).path ?? item.word,
+            };
+          }),
+          {
+            name: args.options.name,
+          },
+        );
+        return ActionFlags.Persist;
+      }
+
+      let cwd = args.sourceOptions.path;
+      if (cwd === "") {
+        cwd = await fn.getcwd(args.denops) as string;
+      }
+
+      let newPath = "";
+      args.actionHistory.actions = [];
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+
+        newPath = await args.denops.call(
+          "ddu#kind#file#cwd_input",
+          cwd,
+          `Please input a new name: ${path} -> `,
+          path,
+          (await isDirectory(path)) ? "dir" : "file",
+        ) as string;
+
+        if (newPath === "" || path === newPath) {
+          continue;
+        }
+
+        await safeAction("rename", path, newPath);
+
+        await args.denops.call(
+          "ddu#kind#file#buffer_rename",
+          await fn.bufnr(args.denops, path),
+          newPath,
+        );
+
+        args.actionHistory.actions.push({
+          name: "rename",
+          item,
+          dest: newPath,
+        });
+      }
+
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath: newPath,
+      };
+    },
+  },
+  trash: {
+    description: "Move the file or directory to the trash.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        kindParams: Params;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      const message = `Are you sure you want to move to the trash ${
+        args.items.length > 1
+          ? args.items.length + " files"
+          : getPath(args.items[0])
+      }?`;
+
+      const confirm = await args.denops.call(
+        "ddu#kind#file#confirm",
+        message,
+        "&Yes\n&No\n&Cancel",
+        2,
+      ) as number;
+      if (confirm !== 1) {
+        return ActionFlags.Persist;
+      }
+
+      const trashCommand = args.kindParams.trashCommand;
+
+      if (!await fn.executable(args.denops, trashCommand[0])) {
+        await args.denops.call(
+          "ddu#util#print_error",
+          `${trashCommand[0]} is not found.`,
+        );
+        return ActionFlags.Persist;
+      }
+
+      args.actionHistory.actions = [];
+      for (const item of args.items) {
+        const cmd = Array.from(trashCommand);
+        cmd.push(getPath(item));
+        const proc = new Deno.Command(
+          cmd[0],
+          {
+            args: cmd.slice(1),
+            stdout: "null",
+            stderr: "piped",
+            stdin: "null",
+          },
+        ).spawn();
+
+        proc.status.then(async (s) => {
+          if (s.success) {
+            return;
+          }
+
+          await args.denops.call(
+            "ddu#util#print_error",
+            `Run ${cmd} is failed with exit code ${s.code}.`,
+          );
+          const err = [];
+          for await (const line of iterLine(proc.stderr)) {
+            err.push(line);
+          }
+          await args.denops.call(
+            "ddu#util#print_error",
+            err.join("\n"),
+          );
+        });
+
+        args.actionHistory.actions.push({
+          name: "trash",
+          item,
+        });
+      }
+
+      return ActionFlags.RefreshItems;
+    },
+  },
+  undo: {
+    description: "Undo the previous action.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      let searchPath = "";
+
+      for (const action of args.actionHistory.actions.reverse()) {
+        switch (action.name) {
+          case "copy":
+            case "link":
+            case "newDirectory":
+            case "newFile":
+            if (action.dest) {
+            await Deno.remove(action.dest, { recursive: true });
+          }
+          break;
+          case "move":
+            case "rename":
+            if (action.dest && action.item) {
+            await move(
+              action.dest,
+              getPath(action.item),
+            );
+            searchPath = getPath(action.item);
+          }
+          break;
+          default:
+            await args.denops.call(
+              "ddu#kind#file#print",
+              `Cannot undo action: ${action.name}`,
+          );
+          return ActionFlags.Persist;
+        }
+      }
+
+      // Clear
+      args.actionHistory.actions = [];
+
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath,
+      };
+    },
+  },
+  yank: {
+    description: "Yank the file path.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      for (const item of args.items) {
+        const action = item?.action as ActionData;
+        const path = action.path ?? item.word;
+
+        await fn.setreg(args.denops, '"', path, "v");
+        await fn.setreg(
+          args.denops,
+          await vars.v.get(args.denops, "register"),
+          path,
+          "v",
+        );
+      }
+
+      return ActionFlags.Persist;
+    },
+  },
+};
+
 type Params = {
   trashCommand: string[];
 };
@@ -81,859 +935,7 @@ type PreviewOption = {
 };
 
 export class Kind extends BaseKind<Params> {
-  override actions: Actions<Params> = {
-    append: {
-      description: "Paste the path like |p|.",
-      callback: async (args: { denops: Denops; items: DduItem[] }) => {
-        for (const item of args.items) {
-          await paste(args.denops, item, "p");
-        }
-        return ActionFlags.None;
-      },
-    },
-    cd: {
-      description: "Call |chdir()| the directory.",
-      callback: async (args: { denops: Denops; items: DduItem[] }) => {
-        for (const item of args.items) {
-          const dir = await getDirectory(item);
-          if (dir !== "") {
-            const filetype = await op.filetype.getLocal(args.denops);
-            await args.denops.call(
-              filetype === "deol" ? "deol#cd" : "chdir",
-              dir,
-            );
-          }
-        }
-
-        return ActionFlags.None;
-      },
-    },
-    copy: {
-      description: "Copy the selected files to ddu clipboard.",
-      callback: async (
-        args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
-      ) => {
-        const message = `Copy to the clipboard: ${
-          args.items.length > 1
-            ? args.items.length + " files"
-            : getPath(args.items[0])
-        }`;
-
-        await args.denops.call("ddu#kind#file#print", message);
-
-        args.clipboard.action = "copy";
-        args.clipboard.items = args.items;
-        args.clipboard.mode = "";
-
-        return ActionFlags.Persist;
-      },
-    },
-    delete: {
-      description: "Delete the file or directory.",
-      callback: async (
-        args: {
-          denops: Denops;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-          actionHistory: ActionHistory;
-        },
-      ) => {
-        const message = `Are you sure you want to delete ${
-          args.items.length > 1
-            ? args.items.length + " files"
-            : getPath(args.items[0])
-        }?`;
-
-        const confirm = await args.denops.call(
-          "ddu#kind#file#confirm",
-          message,
-          "&Yes\n&No\n&Cancel",
-          2,
-        ) as number;
-        if (confirm !== 1) {
-          return ActionFlags.Persist;
-        }
-
-        args.actionHistory.actions = [];
-        for (const item of args.items) {
-          await Deno.remove(getPath(item), { recursive: true });
-          args.actionHistory.actions.push({
-            name: "delete",
-            item,
-          });
-        }
-
-        return ActionFlags.RefreshItems;
-      },
-    },
-    execute: {
-      description: "Execute the file.",
-      callback: async (
-        args: {
-          denops: Denops;
-          actionParams: unknown;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-        },
-      ) => {
-        const params = args.actionParams as ExecuteParams;
-        const command = params.command ?? "edit";
-
-        for (const item of args.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
-
-          await args.denops.call(
-            "ddu#util#execute_path",
-            command,
-            path,
-          );
-        }
-
-        return ActionFlags.None;
-      },
-    },
-    executeSystem: {
-      description: "Execute the file by system associated command.",
-      callback: async (
-        args: {
-          denops: Denops;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-        },
-      ) => {
-        for (const item of args.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
-          await args.denops.call("ddu#kind#file#open", path);
-        }
-
-        return ActionFlags.Persist;
-      },
-    },
-    feedkeys: {
-      description:
-        "Use |feedkeys()| to insert the path.\nIt is useful in command line mode.",
-      callback: async (args: { denops: Denops; items: DduItem[] }) => {
-        for (const item of args.items) {
-          await feedkeys(args.denops, item);
-        }
-        return ActionFlags.None;
-      },
-    },
-    insert: {
-      description: "Paste the path like |P|.",
-      callback: async (args: { denops: Denops; items: DduItem[] }) => {
-        for (const item of args.items) {
-          await paste(args.denops, item, "P");
-        }
-        return ActionFlags.None;
-      },
-    },
-    link: {
-      description: "Create link the selected files to ddu clipboard.",
-      callback: async (args: {
-        denops: Denops;
-        actionParams: unknown;
-        items: DduItem[];
-        clipboard: Clipboard;
-      }) => {
-        const params = args.actionParams as LinkParams;
-        const mode = params.mode ?? "absolute";
-        const message = `Link to the clipboard: ${
-          args.items.length > 1
-            ? args.items.length + " files"
-            : getPath(args.items[0])
-        }`;
-
-        await args.denops.call("ddu#kind#file#print", message);
-
-        args.clipboard.action = "link";
-        args.clipboard.items = args.items;
-        args.clipboard.mode = mode;
-
-        return ActionFlags.Persist;
-      },
-    },
-    loclist: {
-      description:
-        "Set the |location-list| and open the |location-list| window.",
-      callback: async (args: { denops: Denops; items: DduItem[] }) => {
-        const qfloclist: QuickFix[] = buildQfLocList(args.items);
-
-        if (qfloclist.length !== 0) {
-          await fn.setloclist(args.denops, 0, qfloclist, " ");
-          await args.denops.cmd("lopen");
-        }
-
-        return ActionFlags.None;
-      },
-    },
-    move: {
-      description: "Move the selected files to ddu clipboard.",
-      callback: async (
-        args: { denops: Denops; items: DduItem[]; clipboard: Clipboard },
-      ) => {
-        const message = `Move to the clipboard: ${
-          args.items.length > 1
-            ? args.items.length + " files"
-            : getPath(args.items[0])
-        }`;
-
-        await args.denops.call("ddu#kind#file#print", message);
-
-        args.clipboard.action = "move";
-        args.clipboard.items = args.items;
-        args.clipboard.mode = "";
-
-        return ActionFlags.Persist;
-      },
-    },
-    narrow: {
-      description: "Change |ddu-source-option-path| to the directory.",
-      callback: async (args: {
-        denops: Denops;
-        options: DduOptions;
-        actionParams: unknown;
-        sourceOptions: SourceOptions;
-        items: DduItem[];
-      }) => {
-        const params = args.actionParams as NarrowParams;
-        if (params.path) {
-          if (params.path === "..") {
-            let current = treePath2Filename(args.sourceOptions.path);
-            if (current === "") {
-              current = await fn.getcwd(args.denops) as string;
-            }
-            args.sourceOptions.path = normalize(join(current, ".."));
-            return {
-              flags: ActionFlags.RefreshItems,
-              searchPath: current,
-            };
-          } else {
-            args.sourceOptions.path = params.path;
-            return ActionFlags.RefreshItems;
-          }
-        }
-
-        if (args.items.length > 1) {
-          await args.denops.call("ddu#start", {
-            name: args.options.name,
-            push: true,
-            sources: await Promise.all(args.items.map(async (item) => {
-              return {
-                name: "file",
-                options: {
-                  columns: args.sourceOptions.columns,
-                  path: await getDirectory(item),
-                },
-              };
-            })),
-          });
-
-          return ActionFlags.None;
-        }
-
-        const dir = await getDirectory(args.items[0]);
-        if (dir !== "") {
-          args.sourceOptions.path = dir;
-          return ActionFlags.RefreshItems;
-        }
-
-        return ActionFlags.None;
-      },
-    },
-    newDirectory: {
-      description:
-        "Make new directory in expanded directory tree or current directory.",
-      callback: async (
-        args: {
-          denops: Denops;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-          actionHistory: ActionHistory;
-        },
-      ) => {
-        const cwd = await getTargetDirectory(
-          args.denops,
-          treePath2Filename(args.sourceOptions.path),
-          args.items,
-        );
-
-        const input = await args.denops.call(
-          "ddu#kind#file#cwd_input",
-          cwd,
-          "Please input directory names(comma separated): ",
-          "",
-          "dir",
-        ) as string;
-        if (input === "") {
-          return ActionFlags.Persist;
-        }
-
-        let newDirectory = "";
-
-        args.actionHistory.actions = [];
-        for (const name of input.split(",")) {
-          newDirectory = isAbsolute(name) ? name : join(cwd, name);
-
-          // Exists check
-          if (await exists(newDirectory)) {
-            await args.denops.call(
-              "ddu#kind#file#print",
-              `${newDirectory} already exists.`,
-            );
-            return ActionFlags.Persist;
-          }
-
-          await ensureDir(newDirectory);
-
-          args.actionHistory.actions.push({
-            name: "newDirectory",
-            dest: newDirectory,
-          });
-        }
-
-        if (newDirectory === "") {
-          return ActionFlags.Persist;
-        }
-
-        return {
-          flags: ActionFlags.RefreshItems,
-          searchPath: newDirectory,
-        };
-      },
-    },
-    newFile: {
-      description:
-        "Make new file in expanded directory tree or current directory.",
-      callback: async (
-        args: {
-          denops: Denops;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-          actionHistory: ActionHistory;
-        },
-      ) => {
-        const cwd = await getTargetDirectory(
-          args.denops,
-          treePath2Filename(args.sourceOptions.path),
-          args.items,
-        );
-
-        const input = await args.denops.call(
-          "ddu#kind#file#cwd_input",
-          cwd,
-          "Please input names(comma separated): ",
-          "",
-          "file",
-        ) as string;
-        if (input === "") {
-          return ActionFlags.Persist;
-        }
-
-        let newFile = "";
-
-        args.actionHistory.actions = [];
-        for (const name of input.split(",")) {
-          newFile = isAbsolute(name) ? name : join(cwd, name);
-
-          // Exists check
-          if (await exists(newFile)) {
-            await args.denops.call(
-              "ddu#kind#file#print",
-              `${newFile} already exists.`,
-            );
-            continue;
-          }
-
-          if (newFile.slice(-1) === "/") {
-            await ensureDir(newFile);
-          } else {
-            await ensureFile(newFile);
-          }
-
-          args.actionHistory.actions.push({
-            name: "newFile",
-            dest: newFile,
-          });
-        }
-
-        if (newFile === "") {
-          return ActionFlags.Persist;
-        }
-
-        return {
-          flags: ActionFlags.RefreshItems,
-          searchPath: newFile,
-        };
-      },
-    },
-    open: {
-      description:
-        "Open the items.\nIf the item is buffer, switch to the buffer.\n" +
-        "If the item is file, open the file.",
-      callback: async (args: {
-        denops: Denops;
-        context: Context;
-        actionParams: unknown;
-        items: DduItem[];
-      }) => {
-        const params = args.actionParams as OpenParams;
-        const openCommand = params.command ?? "edit";
-
-        // Save current position.
-        await args.denops.cmd("normal! m`");
-
-        for (const item of args.items) {
-          const action = item?.action as ActionData;
-          const bufNr = action.bufNr ??
-            await args.denops.call(
-              "ddu#kind#file#bufnr",
-              action.path ?? item.word,
-            ) as number;
-
-          if (bufNr >= 0) {
-            if (openCommand !== "edit") {
-              await args.denops.call(
-                "ddu#util#execute_path",
-                openCommand,
-                action.path ?? "",
-              );
-            }
-
-            // NOTE: "bufNr" may be hidden
-            const loaded = await fn.bufloaded(args.denops, bufNr);
-            if (!loaded) {
-              await fn.bufload(args.denops, bufNr);
-            }
-            await args.denops.cmd(`buffer ${bufNr}`);
-            if (!loaded) {
-              await fn.setbufvar(args.denops, bufNr, "&buflisted", 1);
-            }
-          } else if (action.path) {
-            await args.denops.call(
-              "ddu#util#execute_path",
-              openCommand,
-              action.path,
-            );
-          }
-
-          const mode = await fn.mode(args.denops);
-          if (action.lineNr !== undefined) {
-            await fn.cursor(args.denops, action.lineNr, 0);
-
-            if (args.context.input !== "") {
-              // Search the input text
-              const text = (await fn.getline(args.denops, ".")).toLowerCase();
-              const input = args.context.input.toLowerCase();
-              await fn.cursor(
-                args.denops,
-                0,
-                text.indexOf(input) + 1 + (mode === "i" ? 1 : 0),
-              );
-            }
-          }
-
-          if (action.col !== undefined) {
-            // If it is insert mode, it needs adjust.
-            await fn.cursor(
-              args.denops,
-              0,
-              action.col + (mode === "i" ? 1 : 0),
-            );
-          }
-
-          // NOTE: Open folds and centering
-          await args.denops.cmd("normal! zvzz");
-        }
-
-        return ActionFlags.None;
-      },
-    },
-    paste: {
-      description: "Fire the clipboard action in the current directory.",
-      callback: async (
-        args: {
-          denops: Denops;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-          clipboard: Clipboard;
-          actionHistory: ActionHistory;
-        },
-      ) => {
-        const cwd = await getTargetDirectory(
-          args.denops,
-          treePath2Filename(args.sourceOptions.path),
-          args.items,
-        );
-
-        let searchPath = "";
-        let defaultConfirm = "";
-        args.actionHistory.actions = [];
-        switch (args.clipboard.action) {
-          case "copy":
-            for (const item of args.clipboard.items) {
-              const action = item?.action as ActionData;
-              const path = action.path ?? item.word;
-
-              const ret = await checkOverwrite(
-                args.denops,
-                path,
-                join(cwd, basename(path)),
-                defaultConfirm,
-              );
-              const dest = ret.dest;
-              defaultConfirm = ret.defaultConfirm;
-              if (dest === "") {
-                continue;
-              }
-
-              await safeAction("copy", path, dest);
-
-              searchPath = dest;
-
-              args.actionHistory.actions.push({
-                name: "copy",
-                item,
-                dest,
-              });
-            }
-            break;
-          case "link":
-            for (const item of args.clipboard.items) {
-              const action = item?.action as ActionData;
-              const path = action.path ?? item.word;
-
-              const ret = await checkOverwrite(
-                args.denops,
-                path,
-                join(cwd, basename(path)),
-                defaultConfirm,
-              );
-              const dest = ret.dest;
-              defaultConfirm = ret.defaultConfirm;
-              if (dest === "") {
-                continue;
-              }
-
-              // Exists check
-              if (await exists(dest)) {
-                await args.denops.call(
-                  "ddu#kind#file#print",
-                  `${dest} already exists.`,
-                );
-                return ActionFlags.Persist;
-              }
-
-              switch (args.clipboard.mode) {
-                case "hard":
-                  await Deno.link(path, dest);
-                  break;
-                case "absolute":
-                  await Deno.symlink(path, dest, {
-                    type: await isDirectory(path) ? "dir" : "file",
-                  });
-                  break;
-                case "relative":
-                  await Deno.symlink(relative(path, dirname(dest)), dest, {
-                    type: await isDirectory(path) ? "dir" : "file",
-                  });
-                  break;
-                default:
-                  await args.denops.call(
-                    "ddu#kind#file#print",
-                    `Invalid mode: ${args.clipboard.mode}`,
-                  );
-                  return ActionFlags.Persist;
-              }
-
-              searchPath = dest;
-
-              args.actionHistory.actions.push({
-                name: "link",
-                item,
-                dest,
-              });
-            }
-            break;
-          case "move":
-            for (const item of args.clipboard.items) {
-              const action = item?.action as ActionData;
-              const path = action.path ?? item.word;
-              const ret = await checkOverwrite(
-                args.denops,
-                path,
-                join(cwd, basename(path)),
-                defaultConfirm,
-              );
-              const dest = ret.dest;
-              defaultConfirm = ret.defaultConfirm;
-              if (dest === "") {
-                continue;
-              }
-
-              await safeAction("move", path, dest);
-
-              searchPath = dest;
-
-              args.actionHistory.actions.push({
-                name: "move",
-                item,
-                dest,
-              });
-            }
-            break;
-          default:
-            await args.denops.call(
-              "ddu#kind#file#print",
-              `Invalid action: ${args.clipboard.action}`,
-            );
-            return ActionFlags.Persist;
-        }
-
-        if (searchPath === "") {
-          return ActionFlags.Persist;
-        } else {
-          return {
-            flags: ActionFlags.RefreshItems,
-            searchPath,
-          };
-        }
-      },
-    },
-    quickfix: {
-      description: "Set the |quickfix| list and open the |quickfix| window.",
-      callback: async (args: { denops: Denops; items: DduItem[] }) => {
-        const qfloclist: QuickFix[] = buildQfLocList(args.items);
-
-        if (qfloclist.length !== 0) {
-          await fn.setqflist(args.denops, qfloclist, " ");
-          await args.denops.cmd("copen");
-        }
-
-        return ActionFlags.None;
-      },
-    },
-    rename: {
-      description:
-        "Rename the file/directory under cursor or from selected list.",
-      callback: async (args: {
-        denops: Denops;
-        options: DduOptions;
-        items: DduItem[];
-        sourceOptions: SourceOptions;
-        actionHistory: ActionHistory;
-      }) => {
-        if (args.items.length > 1) {
-          // Use exrename instead
-          await args.denops.call(
-            "ddu#kind#file#exrename#create_buffer",
-            args.items.map((item) => {
-              return {
-                action__path: (item?.action as ActionData).path ?? item.word,
-              };
-            }),
-            {
-              name: args.options.name,
-            },
-          );
-          return ActionFlags.Persist;
-        }
-
-        let cwd = args.sourceOptions.path;
-        if (cwd === "") {
-          cwd = await fn.getcwd(args.denops) as string;
-        }
-
-        let newPath = "";
-        args.actionHistory.actions = [];
-        for (const item of args.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
-
-          newPath = await args.denops.call(
-            "ddu#kind#file#cwd_input",
-            cwd,
-            `Please input a new name: ${path} -> `,
-            path,
-            (await isDirectory(path)) ? "dir" : "file",
-          ) as string;
-
-          if (newPath === "" || path === newPath) {
-            continue;
-          }
-
-          await safeAction("rename", path, newPath);
-
-          await args.denops.call(
-            "ddu#kind#file#buffer_rename",
-            await fn.bufnr(args.denops, path),
-            newPath,
-          );
-
-          args.actionHistory.actions.push({
-            name: "rename",
-            item,
-            dest: newPath,
-          });
-        }
-
-        return {
-          flags: ActionFlags.RefreshItems,
-          searchPath: newPath,
-        };
-      },
-    },
-    trash: {
-      description: "Move the file or directory to the trash.",
-      callback: async (
-        args: {
-          denops: Denops;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-          kindParams: Params;
-          actionHistory: ActionHistory;
-        },
-      ) => {
-        const message = `Are you sure you want to move to the trash ${
-          args.items.length > 1
-            ? args.items.length + " files"
-            : getPath(args.items[0])
-        }?`;
-
-        const confirm = await args.denops.call(
-          "ddu#kind#file#confirm",
-          message,
-          "&Yes\n&No\n&Cancel",
-          2,
-        ) as number;
-        if (confirm !== 1) {
-          return ActionFlags.Persist;
-        }
-
-        const trashCommand = args.kindParams.trashCommand;
-
-        if (!await fn.executable(args.denops, trashCommand[0])) {
-          await args.denops.call(
-            "ddu#util#print_error",
-            `${trashCommand[0]} is not found.`,
-          );
-          return ActionFlags.Persist;
-        }
-
-        args.actionHistory.actions = [];
-        for (const item of args.items) {
-          const cmd = Array.from(trashCommand);
-          cmd.push(getPath(item));
-          const proc = new Deno.Command(
-            cmd[0],
-            {
-              args: cmd.slice(1),
-              stdout: "null",
-              stderr: "piped",
-              stdin: "null",
-            },
-          ).spawn();
-
-          proc.status.then(async (s) => {
-            if (s.success) {
-              return;
-            }
-
-            await args.denops.call(
-              "ddu#util#print_error",
-              `Run ${cmd} is failed with exit code ${s.code}.`,
-            );
-            const err = [];
-            for await (const line of iterLine(proc.stderr)) {
-              err.push(line);
-            }
-            await args.denops.call(
-              "ddu#util#print_error",
-              err.join("\n"),
-            );
-          });
-
-          args.actionHistory.actions.push({
-            name: "trash",
-            item,
-          });
-        }
-
-        return ActionFlags.RefreshItems;
-      },
-    },
-    undo: {
-      description: "Undo the previous action.",
-      callback: async (
-        args: {
-          denops: Denops;
-          items: DduItem[];
-          sourceOptions: SourceOptions;
-          actionHistory: ActionHistory;
-        },
-      ) => {
-        let searchPath = "";
-
-        for (const action of args.actionHistory.actions.reverse()) {
-          switch (action.name) {
-            case "copy":
-            case "link":
-            case "newDirectory":
-            case "newFile":
-              if (action.dest) {
-                await Deno.remove(action.dest, { recursive: true });
-              }
-              break;
-            case "move":
-            case "rename":
-              if (action.dest && action.item) {
-                await move(
-                  action.dest,
-                  getPath(action.item),
-                );
-                searchPath = getPath(action.item);
-              }
-              break;
-            default:
-              await args.denops.call(
-                "ddu#kind#file#print",
-                `Cannot undo action: ${action.name}`,
-              );
-              return ActionFlags.Persist;
-          }
-        }
-
-        // Clear
-        args.actionHistory.actions = [];
-
-        return {
-          flags: ActionFlags.RefreshItems,
-          searchPath,
-        };
-      },
-    },
-    yank: {
-      description: "Yank the file path.",
-      callback: async (args: { denops: Denops; items: DduItem[] }) => {
-        for (const item of args.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
-
-          await fn.setreg(args.denops, '"', path, "v");
-          await fn.setreg(
-            args.denops,
-            await vars.v.get(args.denops, "register"),
-            path,
-            "v",
-          );
-        }
-
-        return ActionFlags.Persist;
-      },
-    },
-  };
+  override actions = FileActions;
 
   override async getPreviewer(args: {
     denops: Denops;
