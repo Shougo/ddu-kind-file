@@ -27,15 +27,15 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.201.0/path/mod.ts";
+} from "https://deno.land/std@0.204.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.201.0/fs/mod.ts";
-import { readRange } from "https://deno.land/std@0.201.0/io/read_range.ts";
-import { TextLineStream } from "https://deno.land/std@0.201.0/streams/mod.ts";
+} from "https://deno.land/std@0.204.0/fs/mod.ts";
+import { readRange } from "https://deno.land/std@0.204.0/io/read_range.ts";
+import { TextLineStream } from "https://deno.land/std@0.204.0/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -222,8 +222,7 @@ export const FileActions: Actions<Params> = {
     },
   },
   loclist: {
-    description:
-      "Set the |location-list| and open the |location-list| window.",
+    description: "Set the |location-list| and open the |location-list| window.",
     callback: async (args: { denops: Denops; items: DduItem[] }) => {
       const qfloclist: QuickFix[] = buildQfLocList(args.items);
 
@@ -457,7 +456,7 @@ export const FileActions: Actions<Params> = {
           await args.denops.call(
             "ddu#kind#file#bufnr",
             action.path ?? item.word,
-        ) as number;
+          ) as number;
 
         if (bufNr >= 0) {
           if (openCommand !== "edit") {
@@ -540,122 +539,122 @@ export const FileActions: Actions<Params> = {
       switch (args.clipboard.action) {
         case "copy":
           for (const item of args.clipboard.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
+            const action = item?.action as ActionData;
+            const path = action.path ?? item.word;
 
-          const ret = await checkOverwrite(
-            args.denops,
-            path,
-            join(cwd, basename(path)),
-            defaultConfirm,
-          );
-          const dest = ret.dest;
-          defaultConfirm = ret.defaultConfirm;
-          if (dest === "") {
-            continue;
+            const ret = await checkOverwrite(
+              args.denops,
+              path,
+              join(cwd, basename(path)),
+              defaultConfirm,
+            );
+            const dest = ret.dest;
+            defaultConfirm = ret.defaultConfirm;
+            if (dest === "") {
+              continue;
+            }
+
+            await safeAction("copy", path, dest);
+
+            searchPath = dest;
+
+            args.actionHistory.actions.push({
+              name: "copy",
+              item,
+              dest,
+            });
           }
-
-          await safeAction("copy", path, dest);
-
-          searchPath = dest;
-
-          args.actionHistory.actions.push({
-            name: "copy",
-            item,
-            dest,
-          });
-        }
-        break;
+          break;
         case "link":
           for (const item of args.clipboard.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
+            const action = item?.action as ActionData;
+            const path = action.path ?? item.word;
 
-          const ret = await checkOverwrite(
-            args.denops,
-            path,
-            join(cwd, basename(path)),
-            defaultConfirm,
-          );
-          const dest = ret.dest;
-          defaultConfirm = ret.defaultConfirm;
-          if (dest === "") {
-            continue;
-          }
-
-          // Exists check
-          if (await exists(dest)) {
-            await args.denops.call(
-              "ddu#kind#file#print",
-              `${dest} already exists.`,
+            const ret = await checkOverwrite(
+              args.denops,
+              path,
+              join(cwd, basename(path)),
+              defaultConfirm,
             );
-            return ActionFlags.Persist;
-          }
+            const dest = ret.dest;
+            defaultConfirm = ret.defaultConfirm;
+            if (dest === "") {
+              continue;
+            }
 
-          switch (args.clipboard.mode) {
-            case "hard":
-              await Deno.link(path, dest);
-            break;
-            case "absolute":
-              await Deno.symlink(path, dest, {
-              type: await isDirectory(path) ? "dir" : "file",
-            });
-            break;
-            case "relative":
-              await Deno.symlink(relative(path, dirname(dest)), dest, {
-              type: await isDirectory(path) ? "dir" : "file",
-            });
-            break;
-            default:
+            // Exists check
+            if (await exists(dest)) {
               await args.denops.call(
                 "ddu#kind#file#print",
-                `Invalid mode: ${args.clipboard.mode}`,
-            );
-            return ActionFlags.Persist;
+                `${dest} already exists.`,
+              );
+              return ActionFlags.Persist;
+            }
+
+            switch (args.clipboard.mode) {
+              case "hard":
+                await Deno.link(path, dest);
+                break;
+              case "absolute":
+                await Deno.symlink(path, dest, {
+                  type: await isDirectory(path) ? "dir" : "file",
+                });
+                break;
+              case "relative":
+                await Deno.symlink(relative(path, dirname(dest)), dest, {
+                  type: await isDirectory(path) ? "dir" : "file",
+                });
+                break;
+              default:
+                await args.denops.call(
+                  "ddu#kind#file#print",
+                  `Invalid mode: ${args.clipboard.mode}`,
+                );
+                return ActionFlags.Persist;
+            }
+
+            searchPath = dest;
+
+            args.actionHistory.actions.push({
+              name: "link",
+              item,
+              dest,
+            });
           }
-
-          searchPath = dest;
-
-          args.actionHistory.actions.push({
-            name: "link",
-            item,
-            dest,
-          });
-        }
-        break;
+          break;
         case "move":
           for (const item of args.clipboard.items) {
-          const action = item?.action as ActionData;
-          const path = action.path ?? item.word;
-          const ret = await checkOverwrite(
-            args.denops,
-            path,
-            join(cwd, basename(path)),
-            defaultConfirm,
-          );
-          const dest = ret.dest;
-          defaultConfirm = ret.defaultConfirm;
-          if (dest === "") {
-            continue;
+            const action = item?.action as ActionData;
+            const path = action.path ?? item.word;
+            const ret = await checkOverwrite(
+              args.denops,
+              path,
+              join(cwd, basename(path)),
+              defaultConfirm,
+            );
+            const dest = ret.dest;
+            defaultConfirm = ret.defaultConfirm;
+            if (dest === "") {
+              continue;
+            }
+
+            await safeAction("move", path, dest);
+
+            searchPath = dest;
+
+            args.actionHistory.actions.push({
+              name: "move",
+              item,
+              dest,
+            });
           }
-
-          await safeAction("move", path, dest);
-
-          searchPath = dest;
-
-          args.actionHistory.actions.push({
-            name: "move",
-            item,
-            dest,
-          });
-        }
-        break;
+          break;
         default:
           await args.denops.call(
             "ddu#kind#file#print",
             `Invalid action: ${args.clipboard.action}`,
-        );
-        return ActionFlags.Persist;
+          );
+          return ActionFlags.Persist;
       }
 
       if (searchPath === "") {
@@ -845,29 +844,29 @@ export const FileActions: Actions<Params> = {
       for (const action of args.actionHistory.actions.reverse()) {
         switch (action.name) {
           case "copy":
-            case "link":
-            case "newDirectory":
-            case "newFile":
+          case "link":
+          case "newDirectory":
+          case "newFile":
             if (action.dest) {
-            await Deno.remove(action.dest, { recursive: true });
-          }
-          break;
+              await Deno.remove(action.dest, { recursive: true });
+            }
+            break;
           case "move":
-            case "rename":
+          case "rename":
             if (action.dest && action.item) {
-            await move(
-              action.dest,
-              getPath(action.item),
-            );
-            searchPath = getPath(action.item);
-          }
-          break;
+              await move(
+                action.dest,
+                getPath(action.item),
+              );
+              searchPath = getPath(action.item);
+            }
+            break;
           default:
             await args.denops.call(
               "ddu#kind#file#print",
               `Cannot undo action: ${action.name}`,
-          );
-          return ActionFlags.Persist;
+            );
+            return ActionFlags.Persist;
         }
       }
 
