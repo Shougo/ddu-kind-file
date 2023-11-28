@@ -27,15 +27,15 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.204.0/path/mod.ts";
+} from "https://deno.land/std@0.208.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.204.0/fs/mod.ts";
-import { readRange } from "https://deno.land/std@0.204.0/io/read_range.ts";
-import { TextLineStream } from "https://deno.land/std@0.204.0/streams/mod.ts";
+} from "https://deno.land/std@0.208.0/fs/mod.ts";
+import { readRange } from "https://deno.land/std@0.208.0/io/read_range.ts";
+import { TextLineStream } from "https://deno.land/std@0.208.0/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
