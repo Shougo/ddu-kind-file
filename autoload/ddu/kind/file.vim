@@ -1,12 +1,18 @@
 let s:is_windows = has('win32') || has('win64')
 
 function! ddu#kind#file#open(filename) abort
-  let filename = fnamemodify(a:filename, ':p')
+  let filename = a:filename->fnamemodify(':p')
+
+  if has('nvim-0.10')
+    " Use vim.ui.open instead
+    call v:lua.vim.ui.open(filename)
+    return
+  endif
 
   let is_cygwin = has('win32unix')
   let is_mac = !s:is_windows && !is_cygwin
         \ && (has('mac') || has('macunix') || has('gui_macvim') ||
-        \   (!isdirectory('/proc') && executable('sw_vers')))
+        \   (!('/proc'->isdirectory()) && 'sw_vers'->executable()))
   let is_wsl = s:check_wsl()
 
   " Detect desktop environment.
@@ -16,36 +22,36 @@ function! ddu#kind#file#open(filename) abort
     "   # and % required to be escaped (:help cmdline-special)
     silent execute printf(
           \ '!start rundll32 url.dll,FileProtocolHandler %s',
-          \ escape(filename, '#%'),
+          \ filename->escape('#%'),
           \)
   elseif is_cygwin
     " Cygwin.
     call system(printf('%s %s', 'cygstart',
-          \ shellescape(filename)))
-  elseif executable('xdg-open')
+          \ filename->shellescape()))
+  elseif 'xdg-open'->executable()
     " Linux.
     call system(printf('%s %s &', 'xdg-open',
-          \ shellescape(filename)))
-  elseif executable('lemonade')
+          \ filename->shellescape()))
+  elseif 'lemonade'->executable()
     call system(printf('%s %s &', 'lemonade open',
-          \ shellescape(filename)))
-  elseif exists('$KDE_FULL_SESSION') && $KDE_FULL_SESSION ==# 'true'
+          \ filename->shellescape()))
+  elseif '$KDE_FULL_SESSION'->exists() && $KDE_FULL_SESSION ==# 'true'
     " KDE.
     call system(printf('%s %s &', 'kioclient exec',
-          \ shellescape(filename)))
+          \ filename->shellescape()))
   elseif exists('$GNOME_DESKTOP_SESSION_ID')
     " GNOME.
     call system(printf('%s %s &', 'gnome-open',
-          \ shellescape(filename)))
-  elseif executable('exo-open')
+          \ filename->shellescape()))
+  elseif 'exo-open'->executable()
     " Xfce.
     call system(printf('%s %s &', 'exo-open',
-          \ shellescape(filename)))
+          \ filename->shellescape()))
   elseif is_mac && executable('open')
     " Mac OS.
     call system(printf('%s %s &', 'open',
-          \ shellescape(filename)))
-  elseif is_wsl && executable('cmd.exe')
+          \ filename->shellescape()))
+  elseif is_wsl && 'cmd.exe'->executable()
     " WSL and not installed any open commands
 
     " Open the same way as Windows.
@@ -53,7 +59,7 @@ function! ddu#kind#file#open(filename) abort
     " after execution in vim.
     call system(printf('cmd.exe /c start rundll32 %s %s',
           \ 'url.dll,FileProtocolHandler',
-          \ escape(filename, '#%')))
+          \ filename->escape('#%')))
   else
     " Give up.
     throw 'Not supported.'
@@ -81,8 +87,8 @@ function! s:check_wsl() abort
   if has('nvim')
     return has('wsl')
   endif
-  if has('unix') && executable('uname')
-    return match(system('uname -r'), "\\cMicrosoft") >= 0
+  if has('unix') && 'uname'->executable()
+    return 'uname -r'->system()->match("\\cMicrosoft") >= 0
   endif
   return v:false
 endfunction
@@ -99,7 +105,7 @@ endfunction
 
 function! ddu#kind#file#getchar(default) abort
   try
-    return nr2char(getchar())
+    return getchar()->nr2char()
   catch
     " ignore the errors
   endtry
@@ -123,21 +129,21 @@ endfunction
 function! ddu#kind#file#print(string, ...) abort
   let name = a:0 ? a:1 : 'ddu-kind-file'
   echomsg printf('[%s] %s', name,
-        \ type(a:string) ==# v:t_string ? a:string : string(a:string))
+        \ a:string->type() ==# v:t_string ? a:string : a:string->string())
 endfunction
 
 function! ddu#kind#file#buffer_rename(bufnr, new_filename) abort
-  if a:bufnr < 0 || !bufloaded(a:bufnr)
+  if a:bufnr < 0 || !(a:bufnr->bufloaded())
     return
   endif
 
   let hidden = &hidden
 
   set hidden
-  let bufnr_save = bufnr('%')
+  let bufnr_save = '%'->bufnr()
   noautocmd silent! execute 'buffer' a:bufnr
   silent! execute (&l:buftype ==# '' ? 'saveas!' : 'file')
-        \ fnameescape(a:new_filename)
+        \ a:new_filename->fnameescape()
   if &l:buftype ==# ''
     " Remove old buffer.
     silent! bdelete! #
@@ -152,7 +158,7 @@ function! ddu#kind#file#buffer_delete(bufnr) abort
     return
   endif
 
-  let winid = get(win_findbuf(a:bufnr), 0, -1)
+  let winid = a:bufnr->win_findbuf()->get(0, -1)
   if winid > 0
     let winid_save = win_getid()
     call win_gotoid(winid)
@@ -168,5 +174,5 @@ endfunction
 
 function! ddu#kind#file#bufnr(filename) abort
   " NOTE: bufnr() may be wrong.  It returns submatched buffer number.
-  return bufexists(a:filename) ? bufnr(a:filename) : -1
+  return a:filename->bufexists() ? a:filename->bufnr() : -1
 endfunction
