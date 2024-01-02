@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.8.1/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.9.0/types.ts";
 import {
   Denops,
   ensure,
@@ -18,8 +18,8 @@ import {
   is,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.8.1/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.8.1/utils.ts";
+} from "https://deno.land/x/ddu_vim@v3.9.0/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.9.0/utils.ts";
 import {
   basename,
   dirname,
@@ -27,15 +27,16 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.208.0/path/mod.ts";
+} from "https://deno.land/std@0.210.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.208.0/fs/mod.ts";
-import { readRange } from "https://deno.land/std@0.208.0/io/read_range.ts";
-import { TextLineStream } from "https://deno.land/std@0.208.0/streams/mod.ts";
+} from "https://deno.land/std@0.210.0/fs/mod.ts";
+import { ByteSliceStream } from "https://deno.land/std@0.210.0/streams/byte_slice_stream.ts";
+import { readAll } from "https://deno.land/x/streamtools@v0.5.0/read_all.ts";
+import { TextLineStream } from "https://deno.land/std@0.210.0/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -1175,10 +1176,14 @@ const isBinary = async (
   }
 
   const file = await Deno.open(path, { read: true });
-  const range = await readRange(file, {
-    start: 0,
-    end: Math.min(stat.size, 256) - 1,
-  });
+  const rangedStream = file.readable
+  .pipeThrough(
+    new ByteSliceStream(
+      0,
+      Math.min(stat.size, 256) - 1,
+    ),
+  );
+  const range = await readAll(rangedStream);
   const decoder = new TextDecoder("utf-8");
   const text = decoder.decode(range);
 
