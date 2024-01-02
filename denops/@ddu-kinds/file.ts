@@ -35,7 +35,7 @@ import {
   move,
 } from "https://deno.land/std@0.210.0/fs/mod.ts";
 import { ByteSliceStream } from "https://deno.land/std@0.210.0/streams/byte_slice_stream.ts";
-import { readAll } from "https://deno.land/x/streamtools@v0.5.0/read_all.ts";
+import { toArrayBuffer } from "https://deno.land/std@0.210.0/streams/to_array_buffer.ts";
 import { TextLineStream } from "https://deno.land/std@0.210.0/streams/mod.ts";
 
 export type ActionData = {
@@ -1183,7 +1183,7 @@ const isBinary = async (
       Math.min(stat.size, 256) - 1,
     ),
   );
-  const range = await readAll(rangedStream);
+  const range = await toArrayBuffer(rangedStream);
   const decoder = new TextDecoder("utf-8");
   const text = decoder.decode(range);
 
