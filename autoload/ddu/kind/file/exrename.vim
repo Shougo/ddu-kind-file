@@ -209,7 +209,7 @@ function! s:exit(bufnr) abort
   silent execute 'bdelete!' a:bufnr
 
   call win_gotoid(exrename.prev_winid)
-  call ddu#redraw(exrename.name, { 'refreshItems': v:true })
+  call ddu#redraw(exrename.name, { 'method': 'refreshItems' })
 endfunction
 
 function! s:check_lines() abort
