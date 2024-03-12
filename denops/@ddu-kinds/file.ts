@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.10.2/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.10.3/types.ts";
 import {
   Denops,
   ensure,
@@ -18,8 +18,8 @@ import {
   is,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.10.2/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.10.2/utils.ts";
+} from "https://deno.land/x/ddu_vim@v3.10.3/deps.ts";
+import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.10.3/utils.ts";
 import {
   basename,
   dirname,
@@ -27,16 +27,16 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.215.0/path/mod.ts";
+} from "https://deno.land/std@0.219.1/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.215.0/fs/mod.ts";
-import { ByteSliceStream } from "https://deno.land/std@0.215.0/streams/byte_slice_stream.ts";
-import { toArrayBuffer } from "https://deno.land/std@0.215.0/streams/to_array_buffer.ts";
-import { TextLineStream } from "https://deno.land/std@0.215.0/streams/mod.ts";
+} from "https://deno.land/std@0.219.1/fs/mod.ts";
+import { ByteSliceStream } from "https://deno.land/std@0.219.1/streams/byte_slice_stream.ts";
+import { toArrayBuffer } from "https://deno.land/std@0.219.1/streams/to_array_buffer.ts";
+import { TextLineStream } from "https://deno.land/std@0.219.1/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -1308,7 +1308,9 @@ const safeAction = async (
     src = temp;
   }
 
-  await ensureDir(dirname(dest));
+  if (!await exists(dirname(dest))) {
+    return;
+  }
 
   switch (action) {
     case "rename":
