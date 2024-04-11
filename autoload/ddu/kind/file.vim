@@ -3,67 +3,43 @@ let s:is_windows = has('win32') || has('win64')
 function! ddu#kind#file#open(filename) abort
   let filename = a:filename->fnamemodify(':p')
 
-  if has('nvim-0.10')
+  const method = s:detect_method()
+
+  if method ==# 'nvim-open'
     " Use vim.ui.open instead
     call v:lua.vim.ui.open(filename)
     return
-  endif
-
-  let is_cygwin = has('win32unix')
-  let is_mac = !s:is_windows && !is_cygwin
-        \ && (has('mac') || has('macunix') || has('gui_macvim') ||
-        \   (!('/proc'->isdirectory()) && 'sw_vers'->executable()))
-  let is_wsl = s:check_wsl()
-
-  " Detect desktop environment.
-  if s:is_windows
-    " For URI only.
-    " Note:
+  elseif method ==# 'windows-rundll32'
+    " NOTE:
     "   # and % required to be escaped (:help cmdline-special)
     silent execute printf(
-          \ '!start rundll32 url.dll,FileProtocolHandler %s',
-          \ filename->escape('#%'),
-          \)
-  elseif is_cygwin
-    " Cygwin.
-    call system(printf('%s %s', 'cygstart',
-          \ filename->shellescape()))
-  elseif 'xdg-open'->executable()
-    " Linux.
-    call system(printf('%s %s &', 'xdg-open',
-          \ filename->shellescape()))
-  elseif 'lemonade'->executable()
-    call system(printf('%s %s &', 'lemonade open',
-          \ filename->shellescape()))
-  elseif '$KDE_FULL_SESSION'->exists() && $KDE_FULL_SESSION ==# 'true'
-    " KDE.
-    call system(printf('%s %s &', 'kioclient exec',
-          \ filename->shellescape()))
-  elseif exists('$GNOME_DESKTOP_SESSION_ID')
-    " GNOME.
-    call system(printf('%s %s &', 'gnome-open',
-          \ filename->shellescape()))
-  elseif 'exo-open'->executable()
-    " Xfce.
-    call system(printf('%s %s &', 'exo-open',
-          \ filename->shellescape()))
-  elseif is_mac && executable('open')
-    " Mac OS.
-    call system(printf('%s %s &', 'open',
-          \ filename->shellescape()))
-  elseif is_wsl && 'cmd.exe'->executable()
-    " WSL and not installed any open commands
-
-    " Open the same way as Windows.
-    " I don't know why, but the method using execute requires redraw <C-l>
-    " after execution in vim.
-    call system(printf('cmd.exe /c start rundll32 %s %s',
-          \ 'url.dll,FileProtocolHandler',
-          \ filename->escape('#%')))
+          \    '!start rundll32 url.dll,FileProtocolHandler %s',
+          \    filename->escape('#%'),
+          \ )
+    return
+  elseif method ==# 'kioclient'
+    let command = 'kioclient exec'
+  elseif method->executable()
+    let command = method
   else
+    if is_wsl && 'cmd.exe'->executable()
+      " WSL and not installed any open commands
+
+      " Open the same way as Windows.
+      " I don't know why, but the method using execute requires redraw <C-l>
+      " after execution in vim.
+      call system(printf('cmd.exe /c start rundll32 %s %s',
+            \   'url.dll,FileProtocolHandler',
+            \   filename->escape('#%')),
+            \ )
+      return
+    endif
+
     " Give up.
     throw 'Not supported.'
   endif
+
+  call system(printf('%s %s &', command, filename->shellescape()))
 endfunction
 
 function! ddu#kind#file#cwd_input(cwd, prompt, text, completion) abort
@@ -81,16 +57,6 @@ function! ddu#kind#file#cwd_input(cwd, prompt, text, completion) abort
   endtry
 
   return ''
-endfunction
-
-function! s:check_wsl() abort
-  if has('nvim')
-    return has('wsl')
-  endif
-  if has('unix') && 'uname'->executable()
-    return 'uname -r'->system()->match("\\cMicrosoft") >= 0
-  endif
-  return v:false
 endfunction
 
 function! ddu#kind#file#confirm(msg, choices, default) abort
@@ -175,4 +141,51 @@ endfunction
 function! ddu#kind#file#bufnr(filename) abort
   " NOTE: bufnr() may be wrong.  It returns submatched buffer number.
   return a:filename->bufexists() ? a:filename->bufnr() : -1
+endfunction
+
+function! s:check_wsl() abort
+  if has('nvim')
+    return has('wsl')
+  endif
+  if has('unix') && 'uname'->executable()
+    return 'uname -r'->system()->match("\\cMicrosoft") >= 0
+  endif
+  return v:false
+endfunction
+
+function! s:detect_method() abort
+  if has('nvim-0.10')
+    " Use vim.ui.open instead
+    return 'nvim-open'
+  endif
+
+  let is_cygwin = has('win32unix')
+  let is_mac = !s:is_windows && !is_cygwin
+        \ && (has('mac') || has('macunix') || has('gui_macvim') ||
+        \   (!'/proc'->isdirectory() && 'sw_vers'->executable()))
+  let is_wsl = s:check_wsl()
+
+  if s:is_windows
+    return 'windows-rundll32'
+  endif
+
+  if is_cygwin
+    " Cygwin.
+    return 'cygstart'
+  elseif is_mac && executable('open')
+    " Mac OS.
+    return 'open'
+  elseif is_wsl && executable('wslview')
+    return 'wslview'
+  elseif 'xdg-open'->executable()
+    return 'xdg-open'
+  elseif '$KDE_FULL_SESSION'->exists() && $KDE_FULL_SESSION ==# 'true'
+    return 'kioclient'
+  elseif exists('$GNOME_DESKTOP_SESSION_ID')
+    return 'gnome-open'
+  elseif 'exo-open'->executable()
+    return 'exo-open'
+  endif
+
+  return ''
 endfunction

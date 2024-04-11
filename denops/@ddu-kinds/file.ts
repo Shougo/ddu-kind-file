@@ -27,16 +27,16 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.219.1/path/mod.ts";
+} from "https://deno.land/std@0.221.0/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.219.1/fs/mod.ts";
-import { ByteSliceStream } from "https://deno.land/std@0.219.1/streams/byte_slice_stream.ts";
-import { toArrayBuffer } from "https://deno.land/std@0.219.1/streams/to_array_buffer.ts";
-import { TextLineStream } from "https://deno.land/std@0.219.1/streams/mod.ts";
+} from "https://deno.land/std@0.221.0/fs/mod.ts";
+import { ByteSliceStream } from "https://deno.land/std@0.221.0/streams/byte_slice_stream.ts";
+import { toArrayBuffer } from "https://deno.land/std@0.221.0/streams/to_array_buffer.ts";
+import { TextLineStream } from "https://deno.land/std@0.221.0/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
