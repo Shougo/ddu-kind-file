@@ -1,9 +1,9 @@
 let s:is_windows = has('win32') || has('win64')
 
-function! ddu#kind#file#open(filename) abort
+function! ddu#kind#file#open(filename, method) abort
   let filename = a:filename->fnamemodify(':p')
 
-  const method = s:detect_method()
+  const method = a:method ==# '' ? s:detect_method() : a:method
 
   if method ==# 'nvim-open'
     " Use vim.ui.open instead

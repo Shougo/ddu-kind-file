@@ -73,6 +73,21 @@ execute
 executeSystem
 		Execute the file by system associated command.
 
+		params:
+			{method}:	specify the execute method.
+					(Default: "")
+
+			"nvim-open":	Use |vim.ui.open()|.
+			"windows-rundll32": Use Windows rundll32.
+			"cygstart":	Use "cygstart" command.
+			"open":		Use "open" command.
+			"wslview":	Use "wslview" command.
+			"xdg-open":	Use "xdg-open" command.
+			"kioclient":	Use "kioclient" command.
+			"gnome-open":	Use "gnome-open" command.
+			"exo-open":	Use "exo-open" command.
+			"":		Detect method automatically.
+
                                                *ddu-kind-file-action-feedkeys*
 feedkeys
 		Use |feedkeys()| to insert the path.
@@ -89,11 +104,11 @@ link
 		params:
 			{mode}:		create link mode.
 
-			"hard":      Create hard link.
-			"relative":  Create relative symbolic link from
-			             destination parent.
-			"absolute":  Create absolute symbolic link.
-			default:     Create symbolic link.
+			"hard":		Create hard link.
+			"relative":	Create relative symbolic link from
+					destination parent.
+			"absolute":	Create absolute symbolic link.
+			default:	Create symbolic link.
 
                                                 *ddu-kind-file-action-loclist*
 loclist

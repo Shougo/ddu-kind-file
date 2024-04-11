@@ -165,14 +165,18 @@ export const FileActions: Actions<Params> = {
     callback: async (
       args: {
         denops: Denops;
+        actionParams: unknown;
         items: DduItem[];
         sourceOptions: SourceOptions;
       },
     ) => {
+      const params = args.actionParams as ExecuteSystemParams;
+      const method = params.method ?? "";
+
       for (const item of args.items) {
         const action = item?.action as ActionData;
         const path = action.path ?? item.word;
-        await args.denops.call("ddu#kind#file#open", path);
+        await args.denops.call("ddu#kind#file#open", path, method);
       }
 
       return ActionFlags.Persist;
@@ -911,6 +915,10 @@ type NarrowParams = {
 
 type ExecuteParams = {
   command: string;
+};
+
+type ExecuteSystemParams = {
+  method: string;
 };
 
 type OpenParams = {
