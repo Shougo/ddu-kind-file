@@ -10,7 +10,7 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v3.10.3/types.ts";
+} from "https://deno.land/x/ddu_vim@v4.0.0/types.ts";
 import {
   Denops,
   ensure,
@@ -18,8 +18,11 @@ import {
   is,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v3.10.3/deps.ts";
-import { treePath2Filename } from "https://deno.land/x/ddu_vim@v3.10.3/utils.ts";
+} from "https://deno.land/x/ddu_vim@v4.0.0/deps.ts";
+import {
+  printError,
+  treePath2Filename,
+} from "https://deno.land/x/ddu_vim@v4.0.0/utils.ts";
 import {
   basename,
   dirname,
@@ -27,16 +30,16 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.221.0/path/mod.ts";
+} from "https://deno.land/std@0.222.1/path/mod.ts";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.221.0/fs/mod.ts";
-import { ByteSliceStream } from "https://deno.land/std@0.221.0/streams/byte_slice_stream.ts";
-import { toArrayBuffer } from "https://deno.land/std@0.221.0/streams/to_array_buffer.ts";
-import { TextLineStream } from "https://deno.land/std@0.221.0/streams/mod.ts";
+} from "https://deno.land/std@0.222.1/fs/mod.ts";
+import { ByteSliceStream } from "https://deno.land/std@0.222.1/streams/byte_slice_stream.ts";
+import { toArrayBuffer } from "https://deno.land/std@0.222.1/streams/to_array_buffer.ts";
+import { TextLineStream } from "https://deno.land/std@0.222.1/streams/mod.ts";
 
 export type ActionData = {
   bufNr?: number;
@@ -785,8 +788,8 @@ export const FileActions: Actions<Params> = {
       const trashCommand = args.kindParams.trashCommand;
 
       if (!await fn.executable(args.denops, trashCommand[0])) {
-        await args.denops.call(
-          "ddu#util#print_error",
+        await printError(
+          args.denops,
           `${trashCommand[0]} is not found.`,
         );
         return ActionFlags.Persist;
@@ -811,17 +814,17 @@ export const FileActions: Actions<Params> = {
             return;
           }
 
-          await args.denops.call(
-            "ddu#util#print_error",
+          await printError(
+            args.denops,
             `Run ${cmd} is failed with exit code ${s.code}.`,
           );
           const err = [];
           for await (const line of iterLine(proc.stderr)) {
             err.push(line);
           }
-          await args.denops.call(
-            "ddu#util#print_error",
-            err.join("\n"),
+          await printError(
+            args.denops,
+            err,
           );
         });
 
@@ -1185,12 +1188,12 @@ const isBinary = async (
 
   const file = await Deno.open(path, { read: true });
   const rangedStream = file.readable
-  .pipeThrough(
-    new ByteSliceStream(
-      0,
-      Math.min(stat.size, 256) - 1,
-    ),
-  );
+    .pipeThrough(
+      new ByteSliceStream(
+        0,
+        Math.min(stat.size, 256) - 1,
+      ),
+    );
   const range = await toArrayBuffer(rangedStream);
   const decoder = new TextDecoder("utf-8");
   const text = decoder.decode(range);
