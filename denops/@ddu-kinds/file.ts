@@ -824,7 +824,7 @@ export const FileActions: Actions<Params> = {
           }
           await printError(
             args.denops,
-            err,
+            err.join("\n"),
           );
         });
 
