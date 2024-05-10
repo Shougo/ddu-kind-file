@@ -30,16 +30,16 @@ import {
   join,
   normalize,
   relative,
-} from "https://deno.land/std@0.222.1/path/mod.ts";
+} from "jsr:@std/path@0.224.0";
 import {
   copy,
   ensureDir,
   ensureFile,
   move,
-} from "https://deno.land/std@0.222.1/fs/mod.ts";
-import { ByteSliceStream } from "https://deno.land/std@0.222.1/streams/byte_slice_stream.ts";
-import { toArrayBuffer } from "https://deno.land/std@0.222.1/streams/to_array_buffer.ts";
-import { TextLineStream } from "https://deno.land/std@0.222.1/streams/mod.ts";
+} from "jsr:@std/fs@0.224.0";
+import { ByteSliceStream } from "jsr:@std/streams@0.224.0/byte-slice-stream";
+import { toArrayBuffer } from "jsr:@std/streams@0.224.0/to-array-buffer";
+import { TextLineStream } from "jsr:@std/streams@0.224.0";
 
 export type ActionData = {
   bufNr?: number;
