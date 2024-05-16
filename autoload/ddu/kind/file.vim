@@ -7,7 +7,11 @@ function! ddu#kind#file#open(filename, method) abort
 
   if method ==# 'nvim-open'
     " Use vim.ui.open instead
-    call v:lua.vim.ui.open(filename)
+
+    " NOTE: vim.ui.open seems broken by
+    " "Vim(call):E5101: Cannot convert given lua type (code: 0)"
+    silent! call v:lua.vim.ui.open(filename)
+
     return
   elseif method ==# 'windows-rundll32'
     " NOTE:
