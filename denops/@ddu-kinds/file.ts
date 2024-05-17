@@ -10,33 +10,23 @@ import {
   PreviewContext,
   Previewer,
   SourceOptions,
-} from "https://deno.land/x/ddu_vim@v4.0.0/types.ts";
+} from "https://deno.land/x/ddu_vim@v4.1.0/types.ts";
 import {
+  basename,
   Denops,
+  dirname,
   ensure,
   fn,
   is,
   op,
   vars,
-} from "https://deno.land/x/ddu_vim@v4.0.0/deps.ts";
+} from "https://deno.land/x/ddu_vim@v4.1.0/deps.ts";
 import {
   printError,
   treePath2Filename,
-} from "https://deno.land/x/ddu_vim@v4.0.0/utils.ts";
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  join,
-  normalize,
-  relative,
-} from "jsr:@std/path@0.224.0";
-import {
-  copy,
-  ensureDir,
-  ensureFile,
-  move,
-} from "jsr:@std/fs@0.224.0";
+} from "https://deno.land/x/ddu_vim@v4.1.0/utils.ts";
+import { isAbsolute, join, normalize, relative } from "jsr:@std/path@0.225.1";
+import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@0.229.1";
 import { ByteSliceStream } from "jsr:@std/streams@0.224.0/byte-slice-stream";
 import { toArrayBuffer } from "jsr:@std/streams@0.224.0/to-array-buffer";
 import { TextLineStream } from "jsr:@std/streams@0.224.0";
