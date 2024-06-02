@@ -57,9 +57,8 @@ export const FileActions: Actions<Params> = {
       for (const item of args.items) {
         const dir = await getDirectory(item);
         if (dir !== "") {
-          const filetype = await op.filetype.getLocal(args.denops);
           await args.denops.call(
-            filetype === "deol" ? "deol#cd" : "chdir",
+            "chdir",
             dir,
           );
         }
