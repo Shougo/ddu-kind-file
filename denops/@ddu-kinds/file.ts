@@ -18,13 +18,13 @@ import {
   ensure,
   fn,
   is,
-  op,
   vars,
 } from "https://deno.land/x/ddu_vim@v4.1.0/deps.ts";
 import {
   printError,
   treePath2Filename,
 } from "https://deno.land/x/ddu_vim@v4.1.0/utils.ts";
+
 import { isAbsolute, join, normalize, relative } from "jsr:@std/path@0.225.1";
 import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@0.229.1";
 import { ByteSliceStream } from "jsr:@std/streams@0.224.0/byte-slice-stream";
