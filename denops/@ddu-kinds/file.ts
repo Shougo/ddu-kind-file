@@ -1,35 +1,32 @@
 import {
   ActionFlags,
-  ActionHistory,
-  Actions,
+  type ActionHistory,
+  type Actions,
   BaseKind,
-  Clipboard,
-  Context,
-  DduItem,
-  DduOptions,
-  PreviewContext,
-  Previewer,
-  SourceOptions,
-} from "https://deno.land/x/ddu_vim@v4.1.0/types.ts";
-import {
-  basename,
-  Denops,
-  dirname,
-  ensure,
-  fn,
-  is,
-  vars,
-} from "https://deno.land/x/ddu_vim@v4.1.0/deps.ts";
+  type Clipboard,
+  type Context,
+  type DduItem,
+  type DduOptions,
+  type Denops,
+  type PreviewContext,
+  type Previewer,
+  type SourceOptions,
+} from "jsr:@shougo/ddu-vim@5.0.0-pre10/types";
 import {
   printError,
   treePath2Filename,
-} from "https://deno.land/x/ddu_vim@v4.1.0/utils.ts";
+} from "jsr:@shougo/ddu-vim@5.0.0-pre10/utils";
+
+import * as fn from "jsr:@denops/std@7.0.0/function";
+import * as vars from "jsr:@denops/std@7.0.0/variable";
+import { basename, dirname } from "jsr:@std/path@1.0.0";
 
 import { isAbsolute, join, normalize, relative } from "jsr:@std/path@0.225.1";
 import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@0.229.1";
 import { ByteSliceStream } from "jsr:@std/streams@0.224.0/byte-slice-stream";
 import { toArrayBuffer } from "jsr:@std/streams@0.224.0/to-array-buffer";
 import { TextLineStream } from "jsr:@std/streams@0.224.0";
+import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
 
 export type ActionData = {
   bufNr?: number;
