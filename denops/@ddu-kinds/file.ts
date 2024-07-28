@@ -11,11 +11,11 @@ import {
   type PreviewContext,
   type Previewer,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@5.0.0-pre10/types";
+} from "jsr:@shougo/ddu-vim@5.0.0/types";
 import {
   printError,
   treePath2Filename,
-} from "jsr:@shougo/ddu-vim@5.0.0-pre10/utils";
+} from "jsr:@shougo/ddu-vim@5.0.0/utils";
 
 import * as fn from "jsr:@denops/std@7.0.0/function";
 import * as vars from "jsr:@denops/std@7.0.0/variable";
