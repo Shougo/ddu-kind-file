@@ -17,15 +17,15 @@ import {
   treePath2Filename,
 } from "jsr:@shougo/ddu-vim@5.0.0/utils";
 
-import * as fn from "jsr:@denops/std@7.0.0/function";
-import * as vars from "jsr:@denops/std@7.0.0/variable";
-import { basename, dirname } from "jsr:@std/path@1.0.0";
+import * as fn from "jsr:@denops/std@7.0.1/function";
+import * as vars from "jsr:@denops/std@7.0.1/variable";
+import { basename, dirname } from "jsr:@std/path@1.0.2";
 
-import { isAbsolute, join, normalize, relative } from "jsr:@std/path@0.225.1";
-import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@0.229.1";
-import { ByteSliceStream } from "jsr:@std/streams@0.224.0/byte-slice-stream";
-import { toArrayBuffer } from "jsr:@std/streams@0.224.0/to-array-buffer";
-import { TextLineStream } from "jsr:@std/streams@0.224.0";
+import { isAbsolute, join, normalize, relative } from "jsr:@std/path@1.0.2";
+import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@1.0.0";
+import { ByteSliceStream } from "jsr:@std/streams@1.0.0/byte-slice-stream";
+import { toArrayBuffer } from "jsr:@std/streams@1.0.0/to-array-buffer";
+import { TextLineStream } from "jsr:@std/streams@1.0.0";
 import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
 
 export type ActionData = {
