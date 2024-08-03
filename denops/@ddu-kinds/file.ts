@@ -11,22 +11,22 @@ import {
   type PreviewContext,
   type Previewer,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@5.0.0/types";
+} from "jsr:@shougo/ddu-vim@~5.0.0/types";
 import {
   printError,
   treePath2Filename,
-} from "jsr:@shougo/ddu-vim@5.0.0/utils";
+} from "jsr:@shougo/ddu-vim@~5.0.0/utils";
 
-import * as fn from "jsr:@denops/std@7.0.1/function";
-import * as vars from "jsr:@denops/std@7.0.1/variable";
-import { basename, dirname } from "jsr:@std/path@1.0.2";
+import * as fn from "jsr:@denops/std@~7.0.1/function";
+import * as vars from "jsr:@denops/std@~7.0.1/variable";
+import { basename, dirname } from "jsr:@std/path@~1.0.2";
 
-import { isAbsolute, join, normalize, relative } from "jsr:@std/path@1.0.2";
-import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@1.0.0";
-import { ByteSliceStream } from "jsr:@std/streams@1.0.0/byte-slice-stream";
-import { toArrayBuffer } from "jsr:@std/streams@1.0.0/to-array-buffer";
-import { TextLineStream } from "jsr:@std/streams@1.0.0";
-import { ensure, is } from "jsr:@core/unknownutil@3.18.1";
+import { isAbsolute, join, normalize, relative } from "jsr:@std/path@~1.0.2";
+import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@~1.0.0";
+import { ByteSliceStream } from "jsr:@std/streams@~1.0.0/byte-slice-stream";
+import { toArrayBuffer } from "jsr:@std/streams@~1.0.0/to-array-buffer";
+import { TextLineStream } from "jsr:@std/streams@~1.0.0";
+import { ensure, is } from "jsr:@core/unknownutil@~4.0.0";
 
 export type ActionData = {
   bufNr?: number;
