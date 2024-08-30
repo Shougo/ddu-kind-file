@@ -2,31 +2,40 @@ import {
   ActionFlags,
   type ActionHistory,
   type Actions,
-  BaseKind,
+  type BaseParams,
   type Clipboard,
   type Context,
   type DduItem,
   type DduOptions,
-  type Denops,
   type PreviewContext,
   type Previewer,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@~5.0.0/types";
+} from "jsr:@shougo/ddu-vim@~6.1.0/types";
+import { BaseKind } from "jsr:@shougo/ddu-vim@~6.1.0/kind";
 import {
   printError,
   treePath2Filename,
-} from "jsr:@shougo/ddu-vim@~5.0.0/utils";
+} from "jsr:@shougo/ddu-vim@~6.1.0/utils";
 
-import * as fn from "jsr:@denops/std@~7.0.1/function";
-import * as vars from "jsr:@denops/std@~7.0.1/variable";
-import { basename, dirname } from "jsr:@std/path@~1.0.2";
+import type { Denops } from "jsr:@denops/std@~7.1.0";
+import * as fn from "jsr:@denops/std@~7.1.0/function";
+import * as vars from "jsr:@denops/std@~7.1.0/variable";
+import { basename } from "jsr:@std/path@~1.0.2/basename";
+import { dirname } from "jsr:@std/path@~1.0.2/dirname";
 
-import { isAbsolute, join, normalize, relative } from "jsr:@std/path@~1.0.2";
-import { copy, ensureDir, ensureFile, move } from "jsr:@std/fs@~1.0.0";
+import { isAbsolute } from "jsr:@std/path@~1.0.2/is-absolute";
+import { join } from "jsr:@std/path@~1.0.2/join";
+import { normalize } from "jsr:@std/path@~1.0.2/normalize";
+import { relative } from "jsr:@std/path@~1.0.2/relative";
+import { copy } from "jsr:@std/fs@~1.0.0/copy";
+import { ensureDir } from "jsr:@std/fs@~1.0.0/ensure-dir";
+import { ensureFile } from "jsr:@std/fs@~1.0.0/ensure-file";
+import { move } from "jsr:@std/fs@~1.0.0/move";
 import { ByteSliceStream } from "jsr:@std/streams@~1.0.0/byte-slice-stream";
 import { toArrayBuffer } from "jsr:@std/streams@~1.0.0/to-array-buffer";
-import { TextLineStream } from "jsr:@std/streams@~1.0.0";
-import { ensure, is } from "jsr:@core/unknownutil@~4.0.0";
+import { TextLineStream } from "jsr:@std/streams@~1.0.0/text-line-stream";
+import { ensure } from "jsr:@core/unknownutil@~4.3.0/ensure";
+import { is } from "jsr:@core/unknownutil@~4.3.0/is";
 
 export type ActionData = {
   bufNr?: number;
@@ -127,7 +136,7 @@ export const FileActions: Actions<Params> = {
     callback: async (
       args: {
         denops: Denops;
-        actionParams: unknown;
+        actionParams: BaseParams;
         items: DduItem[];
         sourceOptions: SourceOptions;
       },
@@ -154,7 +163,7 @@ export const FileActions: Actions<Params> = {
     callback: async (
       args: {
         denops: Denops;
-        actionParams: unknown;
+        actionParams: BaseParams;
         items: DduItem[];
         sourceOptions: SourceOptions;
       },
@@ -194,7 +203,7 @@ export const FileActions: Actions<Params> = {
     description: "Create link the selected files to ddu clipboard.",
     callback: async (args: {
       denops: Denops;
-      actionParams: unknown;
+      actionParams: BaseParams;
       items: DduItem[];
       clipboard: Clipboard;
     }) => {
@@ -253,7 +262,7 @@ export const FileActions: Actions<Params> = {
     callback: async (args: {
       denops: Denops;
       options: DduOptions;
-      actionParams: unknown;
+      actionParams: BaseParams;
       sourceOptions: SourceOptions;
       items: DduItem[];
     }) => {
@@ -435,7 +444,7 @@ export const FileActions: Actions<Params> = {
     callback: async (args: {
       denops: Denops;
       context: Context;
-      actionParams: unknown;
+      actionParams: BaseParams;
       items: DduItem[];
     }) => {
       const params = args.actionParams as OpenParams;
@@ -937,7 +946,7 @@ export class Kind extends BaseKind<Params> {
   override async getPreviewer(args: {
     denops: Denops;
     item: DduItem;
-    actionParams: unknown;
+    actionParams: BaseParams;
     previewContext: PreviewContext;
   }): Promise<Previewer | undefined> {
     const action = args.item.action as ActionData;
