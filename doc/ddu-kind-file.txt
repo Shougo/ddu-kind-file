@@ -169,8 +169,8 @@ rename                                                *ddu-kind-action-rename*
 		Rename the file/directory under cursor or from selected list.
 		Note: If you select multiple files, it will be buffer-rename
 		mode.
-		Note: If you select multiple files, it cannot
-		|ddu-kind-file-action-undo|.
+		Note: If you select multiple files, it cannot support
+		|ddu-kind-file-action-undo| action.
 
                                                   *ddu-kind-file-action-trash*
 trash
