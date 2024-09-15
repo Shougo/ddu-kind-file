@@ -847,6 +847,22 @@ export const FileActions: Actions<Params> = {
 
       const actions: typeof args.actionHistory.actions = [];
 
+      const message = `Are you sure you want to undo ${
+        args.actionHistory.actions.map(
+          (action) => action.name + ":" + action.dest,
+        )
+      } ${args.actionHistory.actions.length > 1 ? "actions" : "action"}?`;
+
+      const confirm = await args.denops.call(
+        "ddu#kind#file#confirm",
+        message,
+        "&Yes\n&No\n&Cancel",
+        2,
+      ) as number;
+      if (confirm !== 1) {
+        return ActionFlags.Persist;
+      }
+
       for (const action of args.actionHistory.actions.reverse()) {
         switch (action.name) {
           case "copy":
@@ -872,7 +888,7 @@ export const FileActions: Actions<Params> = {
               searchPath = getPath(action.item);
 
               actions.push({
-                name: "move",
+                name: action.name,
                 dest: getPath(action.item),
                 item: {
                   ...action.item,
