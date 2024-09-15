@@ -843,6 +843,10 @@ export const FileActions: Actions<Params> = {
         actionHistory: ActionHistory;
       },
     ) => {
+      if (args.actionHistory.actions.length === 0) {
+        return ActionFlags.Persist;
+      }
+
       let searchPath = "";
 
       const actions: typeof args.actionHistory.actions = [];
@@ -1027,10 +1031,10 @@ export class Kind extends BaseKind<Params> {
         for (const cmd of param.previewCmds) {
           replaced.push(cmd.replace(/%(.?)/g, replacer));
         }
-      } catch (e) {
+      } catch (e: unknown) {
         return {
           kind: "nofile",
-          contents: ["Error", e.toString()],
+          contents: e?.toString ? ["Error", e.toString()] : [],
           highlights: [{
             name: "ddu-kind-file-error",
             hl_group: "Error",
