@@ -122,6 +122,7 @@ export const FileActions: Actions<Params> = {
       args.actionHistory.actions = [];
       for (const item of args.items) {
         await Deno.remove(getPath(item), { recursive: true });
+
         args.actionHistory.actions.push({
           name: "delete",
           item,
@@ -844,6 +845,8 @@ export const FileActions: Actions<Params> = {
     ) => {
       let searchPath = "";
 
+      const actions: typeof args.actionHistory.actions = [];
+
       for (const action of args.actionHistory.actions.reverse()) {
         switch (action.name) {
           case "copy":
@@ -852,6 +855,11 @@ export const FileActions: Actions<Params> = {
           case "newFile":
             if (action.dest) {
               await Deno.remove(action.dest, { recursive: true });
+
+              actions.push({
+                name: "delete",
+                item: action.item,
+              });
             }
             break;
           case "move":
@@ -862,6 +870,19 @@ export const FileActions: Actions<Params> = {
                 getPath(action.item),
               );
               searchPath = getPath(action.item);
+
+              actions.push({
+                name: "move",
+                dest: getPath(action.item),
+                item: {
+                  ...action.item,
+                  word: action.dest,
+                  action: {
+                    path: action.dest,
+                  },
+                  treePath: action.dest,
+                },
+              });
             }
             break;
           default:
@@ -874,7 +895,7 @@ export const FileActions: Actions<Params> = {
       }
 
       // Clear
-      args.actionHistory.actions = [];
+      args.actionHistory.actions = actions;
 
       return {
         flags: ActionFlags.RefreshItems,

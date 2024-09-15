@@ -59,7 +59,7 @@ copy
                                                  *ddu-kind-file-action-delete*
 delete
 		Delete the file or directory.
-		Note: It cannot |ddu-kind-file-action-undo|.
+		Note: It cannot support |ddu-kind-file-action-undo| action.
 
                                                 *ddu-kind-file-action-execute*
 execute
@@ -177,7 +177,7 @@ trash
 		Move the file or directory to the trash.
 		It uses |ddu-kind-file-param-trashCommand|.
 
-		Note: It cannot |ddu-kind-file-action-undo|.
+		Note: It cannot support |ddu-kind-file-action-undo| action.
 		If you need undo the action, you need to move the files from
 		trash manually.
 
@@ -185,7 +185,6 @@ trash
 undo
 		Undo the previous action.
 		Note: It can undo only the supported actions.
-		Note: It cannot |ddu-kind-file-action-undo|.
 
                                                    *ddu-kind-file-action-yank*
 yank
