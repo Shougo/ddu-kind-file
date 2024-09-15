@@ -123,6 +123,11 @@ export const FileActions: Actions<Params> = {
       for (const item of args.items) {
         await Deno.remove(getPath(item), { recursive: true });
 
+        await args.denops.call(
+          "ddu#kind#file#buffer_delete",
+          await fn.bufnr(args.denops, getPath(item)),
+        );
+
         args.actionHistory.actions.push({
           name: "delete",
           item,
@@ -644,6 +649,12 @@ export const FileActions: Actions<Params> = {
 
             await safeAction("move", path, dest);
 
+            await args.denops.call(
+              "ddu#kind#file#buffer_rename",
+              await fn.bufnr(args.denops, path),
+              dest,
+            );
+
             searchPath = dest;
 
             args.actionHistory.actions.push({
@@ -807,6 +818,10 @@ export const FileActions: Actions<Params> = {
 
         proc.status.then(async (s) => {
           if (s.success) {
+            await args.denops.call(
+              "ddu#kind#file#buffer_delete",
+              await fn.bufnr(args.denops, getPath(item)),
+            );
             return;
           }
 
