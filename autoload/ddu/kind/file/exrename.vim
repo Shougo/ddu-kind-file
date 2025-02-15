@@ -8,19 +8,19 @@
 let s:PREFIX = has('win32') ? '[exrename]' : '*exrename*'
 
 function! ddu#kind#file#exrename#create_buffer(items, ...) abort
-  let options = extend({
-        \ 'cwd': getcwd(),
-        \ 'bufnr': '%'->bufnr(),
-        \ 'buffer_name': '',
-        \ 'post_rename_callback': v:null,
+  let options = extend(#{
+        \   cwd: getcwd(),
+        \   bufnr: '%'->bufnr(),
+        \   buffer_name: '',
+        \   post_rename_callback: v:null,
         \ }, a:000->get(0, {}))
   if options.cwd !~# '/$'
     " current working directory MUST end with a trailing slash
-    let options.cwd .= '/'
+    let options.cwd ..= '/'
   endif
   let options.buffer_name = s:PREFIX
   if options.buffer_name !=# ''
-    let options.buffer_name .= ' - ' . options.buffer_name
+    let options.buffer_name ..= ' - ' .. options.buffer_name
   endif
 
   let winid = win_getid()
@@ -62,23 +62,26 @@ function! ddu#kind#file#exrename#create_buffer(items, ...) abort
   for item in a:items
     " Make sure that the 'action__path' is absolute path
     if !s:is_absolute(item.action__path)
-      let item.action__path = b:exrename.cwd . item.action__path
+      let item.action__path = b:exrename.cwd .. item.action__path
     endif
+
     " Make sure that the 'action__path' exists
     if !(item.action__path->filewritable())
           \ && !(item.action__path->isdirectory())
       redraw
       call ddu#util#print_error(
-            \ item.action__path . ' does not exist. Skip.')
+            \ item.action__path .. ' does not exist. Skip.')
       continue
     endif
+
     " Make sure that the 'action__path' is unique
     if unique_filenames->has_key(item.action__path)
       redraw
       call ddu#util#print_error(
-            \ item.action__path . ' is duplicated. Skip.')
+            \ item.action__path .. ' is duplicated. Skip.')
       continue
     endif
+
     " Create filename
     let filename = item.action__path
     if filename->stridx(b:exrename.cwd) == 0
@@ -86,16 +89,18 @@ function! ddu#kind#file#exrename#create_buffer(items, ...) abort
     endif
     " directory should end with a trailing slash (to distinguish easily)
     if item.action__path->isdirectory()
-      let filename .= '/'
+      let filename ..= '/'
     endif
 
+    let pattern = s:escape_pattern(filename)->escape('/')
     execute 'syntax match dduExrenameOriginal'
-          \ '/'.printf('^\%%%dl%s$', cnt,
-          \ s:escape_pattern(filename)->escape('/')).'/'
+          \ '/' .. printf('^\%%%dl%s$', cnt, pattern) .. '/'
+
     " Register
     let unique_filenames[item.action__path] = 1
     call add(b:exrename.items, item)
     call add(b:exrename.filenames, filename)
+
     let cnt += 1
   endfor
 
@@ -136,7 +141,7 @@ function! s:do_rename() abort
     let filename = b:exrename.filenames[linenr - 1]
 
     redraw
-    echo printf('(%'.len(max).'d/%d): %s -> %s',
+    echo printf('(%' .. len(max) .. 'd/%d): %s -> %s',
           \ linenr, max, filename, linenr->getline())
 
     if filename ==# linenr->getline()
@@ -155,7 +160,7 @@ function! s:do_rename() abort
       " new_file is already exists.
       redraw
       call ddu#util#print_error(
-            \ new_file . ' is already exists. Skip.')
+            \ new_file .. ' is already exists. Skip.')
 
       let linenr += 1
       continue
@@ -168,7 +173,7 @@ function! s:do_rename() abort
       " Rename error
       redraw
       call ddu#util#print_error(
-            \ new_file . ' is rename error. Skip.')
+            \ new_file .. ' is rename error. Skip.')
 
       let linenr += 1
       continue
@@ -209,7 +214,7 @@ function! s:exit(bufnr) abort
   silent execute 'bdelete!' a:bufnr
 
   call win_gotoid(exrename.prev_winid)
-  call ddu#redraw(exrename.name, { 'method': 'refreshItems' })
+  call ddu#redraw(exrename.name, #{ method: 'refreshItems' })
 endfunction
 
 function! s:check_lines() abort
