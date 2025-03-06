@@ -59,7 +59,7 @@ copy
                                                  *ddu-kind-file-action-delete*
 delete
 		Delete the file or directory.
-		NOTE: It removes the buffer.
+		NOTE: It removes the deleted buffer.
 		NOTE: It cannot support |ddu-kind-file-action-undo| action.
 
                                                 *ddu-kind-file-action-execute*
@@ -178,7 +178,7 @@ trash
 		Move the file or directory to the trash.
 		It uses |ddu-kind-file-param-trashCommand|.
 
-		NOTE: It removes the buffer.
+		NOTE: It removes the deleted buffer.
 		NOTE: It cannot support |ddu-kind-file-action-undo| action.
 		If you need undo the action, you need to move the files from
 		trash manually.
@@ -216,11 +216,11 @@ previewCmds	(string[])
 		%b		Start line of preview
 
 		Example:
-		"bat" (https://github.com/sharkdp/bat) preview >
-		['bat', '-n', '%s', '-r', '%b:%e', '--highlight-line', '%l']
+		Preview with "bat" (https://github.com/sharkdp/bat) >
+		["bat", "-n", "%s", "-r", "%b:%e", "--highlight-line", "%l"]
 <
 		Preview with "less" >
-		['less', '+%b', '%s']
+		["less", "+%b", "%s"]
 <
 
 ==============================================================================
@@ -230,6 +230,10 @@ PARAMS                                                  *ddu-kind-file-params*
 trashCommand	(string[])
 		Trash command.
 
+		Example:
+		Trash with "gtrash"(https://github.com/umlx5h/gtrash) >
+		["gtrash", "put"]
+<
 		Default: ["gio", "trash"]
 
 

@@ -10,16 +10,16 @@ import {
   type PreviewContext,
   type Previewer,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@~9.5.0/types";
-import { BaseKind } from "jsr:@shougo/ddu-vim@~9.5.0/kind";
+} from "jsr:@shougo/ddu-vim@~10.1.0/types";
+import { BaseKind } from "jsr:@shougo/ddu-vim@~10.1.0/kind";
 import {
   printError,
   treePath2Filename,
-} from "jsr:@shougo/ddu-vim@~9.5.0/utils";
+} from "jsr:@shougo/ddu-vim@~10.1.0/utils";
 
-import type { Denops } from "jsr:@denops/std@~7.4.0";
-import * as fn from "jsr:@denops/std@~7.4.0/function";
-import * as vars from "jsr:@denops/std@~7.4.0/variable";
+import type { Denops } from "jsr:@denops/std@~7.5.0";
+import * as fn from "jsr:@denops/std@~7.5.0/function";
+import * as vars from "jsr:@denops/std@~7.5.0/variable";
 
 import { basename } from "jsr:@std/path@~1.0.2/basename";
 import { dirname } from "jsr:@std/path@~1.0.2/dirname";
