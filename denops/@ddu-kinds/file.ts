@@ -120,12 +120,17 @@ export const FileActions: Actions<Params> = {
       }
 
       args.actionHistory.actions = [];
+      let searchPath = "";
       for (const item of args.items) {
-        await Deno.remove(getPath(item), { recursive: true });
+        const itemPath = getPath(item);
+
+        searchPath = dirname(itemPath);
+
+        await Deno.remove(itemPath, { recursive: true });
 
         await args.denops.call(
           "ddu#kind#file#buffer_delete",
-          await fn.bufnr(args.denops, getPath(item)),
+          await fn.bufnr(args.denops, itemPath),
         );
 
         args.actionHistory.actions.push({
@@ -134,7 +139,10 @@ export const FileActions: Actions<Params> = {
         });
       }
 
-      return ActionFlags.RefreshItems;
+      return {
+        flags: ActionFlags.RefreshItems,
+        searchPath,
+      };
     },
   },
   execute: {
