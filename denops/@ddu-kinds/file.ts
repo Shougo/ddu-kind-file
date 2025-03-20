@@ -10,12 +10,12 @@ import {
   type PreviewContext,
   type Previewer,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@~10.1.0/types";
-import { BaseKind } from "jsr:@shougo/ddu-vim@~10.1.0/kind";
+} from "jsr:@shougo/ddu-vim@~10.3.0/types";
+import { BaseKind } from "jsr:@shougo/ddu-vim@~10.3.0/kind";
 import {
   printError,
   treePath2Filename,
-} from "jsr:@shougo/ddu-vim@~10.1.0/utils";
+} from "jsr:@shougo/ddu-vim@~10.3.0/utils";
 
 import type { Denops } from "jsr:@denops/std@~7.5.0";
 import * as fn from "jsr:@denops/std@~7.5.0/function";
@@ -365,7 +365,8 @@ export const FileActions: Actions<Params> = {
             "ddu#kind#file#print",
             `${newDirectory} already exists.`,
           );
-          return ActionFlags.Persist;
+
+          continue;
         }
 
         await ensureDir(newDirectory);
