@@ -108,11 +108,11 @@ function! ddu#kind#file#exrename#create_buffer(items, ...) abort
   let b:exrename.prev_winid = winid
 
   " write filenames
-  let [undolevels, &undolevels] = [&undolevels, -1]
+  let [undolevels, &l:undolevels] = [&l:undolevels, -1]
   try
     call setline(1, b:exrename.filenames)
   finally
-    let &undolevels = undolevels
+    let &l:undolevels = undolevels
   endtry
   setlocal nomodified
 
