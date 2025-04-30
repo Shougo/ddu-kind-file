@@ -156,6 +156,8 @@ open
 		params:
 			{command}:	open command.
 					(Default: "edit")
+			{maxSize}:	max size of preview file.
+					(Default: 500000)
 
 paste                                             *ddu-kind-file-action-paste*
 		Fire the clipboard action in the current directory.

@@ -495,6 +495,41 @@ export const FileActions: Actions<Params> = {
             await fn.setbufvar(args.denops, bufNr, "&buflisted", 1);
           }
         } else if (action.path) {
+          // Check the file is binary file or too big.
+          const stat = await safeStat(action.path);
+          if (stat && stat.isDirectory) {
+            await args.denops.call(
+              "ddu#kind#file#print",
+              `${action.path} is directory.`,
+            );
+            continue;
+          }
+
+          if (stat && await isBinary(action.path, stat)) {
+            const confirm = await args.denops.call(
+              "ddu#kind#file#confirm",
+              `"${action.path}" has binary code.  Opening?`,
+              "&Yes\n&No\n&Cancel",
+              2,
+            ) as number;
+            if (confirm !== 1) {
+              continue;
+            }
+          }
+
+          const maxSize = params.maxSize ?? 500000;
+          if (stat && stat.size > maxSize) {
+            const confirm = await args.denops.call(
+              "ddu#kind#file#confirm",
+              `"${action.path}" ${stat.size} bytes are too huge.  Opening?`,
+              "&Yes\n&No\n&Cancel",
+              2,
+            ) as number;
+            if (confirm !== 1) {
+              continue;
+            }
+          }
+
           await args.denops.call(
             "ddu#util#execute_path",
             openCommand,
@@ -987,6 +1022,7 @@ type ExecuteSystemParams = {
 
 type OpenParams = {
   command: string;
+  maxSize?: number;
 };
 
 type LinkParams = {
@@ -1087,20 +1123,20 @@ export class Kind extends BaseKind<Params> {
         };
       }
 
+      if (stat && await isBinary(action.path, stat)) {
+        // Binary file.
+        return {
+          kind: "nofile",
+          contents: [`${action.path} is binary file`],
+        };
+      }
+
       const maxSize = param.maxSize ?? 500000;
       if (stat && stat.size > maxSize) {
         // Over maxSize file.
         return {
           kind: "nofile",
           contents: [`${action.path} is over maxSize.`],
-        };
-      }
-
-      if (stat && await isBinary(action.path, stat)) {
-        // Binary file.
-        return {
-          kind: "nofile",
-          contents: [`${action.path} is binary file`],
         };
       }
     }
