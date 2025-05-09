@@ -34,8 +34,9 @@ import { move } from "jsr:@std/fs@~1.0.0/move";
 import { ByteSliceStream } from "jsr:@std/streams@~1.0.0/byte-slice-stream";
 import { toArrayBuffer } from "jsr:@std/streams@~1.0.0/to-array-buffer";
 import { TextLineStream } from "jsr:@std/streams@~1.0.0/text-line-stream";
-import { ensure } from "jsr:@core/unknownutil@~4.3.0/ensure";
+import { ensure as unknownEnsure } from "jsr:@core/unknownutil@~4.3.0/ensure";
 import { is } from "jsr:@core/unknownutil@~4.3.0/is";
+import { ensure } from "jsr:@denops/std@~7.5.0/buffer";
 
 export type ActionData = {
   bufNr?: number;
@@ -50,9 +51,13 @@ export type ActionData = {
 export const FileActions: Actions<Params> = {
   append: {
     description: "Paste the path like |p|.",
-    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+    callback: async (
+      args: { denops: Denops; context: Context; items: DduItem[] },
+    ) => {
       for (const item of args.items) {
-        await paste(args.denops, item, "p");
+        await ensure(args.denops, args.context.bufNr, async () => {
+          await paste(args.denops, item, "p");
+        });
       }
       return ActionFlags.None;
     },
@@ -206,9 +211,13 @@ export const FileActions: Actions<Params> = {
   },
   insert: {
     description: "Paste the path like |P|.",
-    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+    callback: async (
+      args: { denops: Denops; context: Context; items: DduItem[] },
+    ) => {
       for (const item of args.items) {
-        await paste(args.denops, item, "P");
+        await ensure(args.denops, args.context.bufNr, async () => {
+          await paste(args.denops, item, "P");
+        });
       }
       return ActionFlags.None;
     },
@@ -1056,7 +1065,7 @@ export class Kind extends BaseKind<Params> {
       return undefined;
     }
 
-    const param = ensure(args.actionParams, is.Record) as PreviewOption;
+    const param = unknownEnsure(args.actionParams, is.Record) as PreviewOption;
 
     if (action.path && param.previewCmds?.length) {
       const previewHeight = args.previewContext.height;
