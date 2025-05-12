@@ -539,13 +539,11 @@ export const FileActions: Actions<Params> = {
             }
           }
 
-          await ensure(args.denops, args.context.bufNr, async () => {
-            await args.denops.call(
-              "ddu#util#execute_path",
-              openCommand,
-              action.path,
-            );
-          });
+          await args.denops.call(
+            "ddu#util#execute_path",
+            openCommand,
+            action.path,
+          );
         }
 
         const mode = await fn.mode(args.denops);
