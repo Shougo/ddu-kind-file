@@ -206,7 +206,7 @@ function! s:exit(bufnr) abort
   let exrename = a:bufnr->getbufvar('exrename', {})
 
   " Switch buffer.
-  if '$'->winnr() != 1
+  if '#'->winnr() > 0 && '#'->winnr() !=# winnr()
     close
   else
     call s:custom_alternate_buffer()
