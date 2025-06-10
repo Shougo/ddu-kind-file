@@ -36,7 +36,6 @@ import { toArrayBuffer } from "jsr:@std/streams@~1.0.0/to-array-buffer";
 import { TextLineStream } from "jsr:@std/streams@~1.0.0/text-line-stream";
 import { ensure as unknownEnsure } from "jsr:@core/unknownutil@~4.3.0/ensure";
 import { is } from "jsr:@core/unknownutil@~4.3.0/is";
-import { ensure } from "jsr:@denops/std@~7.5.0/buffer";
 
 export type ActionData = {
   bufNr?: number;
@@ -55,9 +54,7 @@ export const FileActions: Actions<Params> = {
       args: { denops: Denops; context: Context; items: DduItem[] },
     ) => {
       for (const item of args.items) {
-        await ensure(args.denops, args.context.bufNr, async () => {
-          await paste(args.denops, item, "p");
-        });
+        await paste(args.denops, item, "p");
       }
       return ActionFlags.None;
     },
@@ -215,9 +212,7 @@ export const FileActions: Actions<Params> = {
       args: { denops: Denops; context: Context; items: DduItem[] },
     ) => {
       for (const item of args.items) {
-        await ensure(args.denops, args.context.bufNr, async () => {
-          await paste(args.denops, item, "P");
-        });
+        await paste(args.denops, item, "P");
       }
       return ActionFlags.None;
     },
