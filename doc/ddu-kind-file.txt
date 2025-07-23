@@ -31,7 +31,7 @@ https://github.com/vim-denops/denops.vim
 
 ==============================================================================
 EXAMPLES                                              *ddu-kind-file-examples*
->
+>vim
 	call ddu#custom#patch_global(#{
 	    \   kindOptions: #{
 	    \     file: #{
@@ -51,6 +51,22 @@ append
                                                      *ddu-kind-file-action-cd*
 cd
 		Call |chdir()| the directory.
+
+                                               *ddu-kind-file-action-clipCopy*
+clipCopy
+		Copy files from clipboard register.
+		It is useful to copy files across Vim/Neovim instances.
+		NOTE: It cannot support |ddu-kind-file-action-undo| action.
+
+                                               *ddu-kind-file-action-clipMove*
+clipMove
+		Move files from clipboard register.
+		It is useful to move files across Vim/Neovim instances.
+		NOTE: It cannot support |ddu-kind-file-action-undo| action.
+
+                                               *ddu-kind-file-action-clipYank*
+clipYank
+		Yank the file path to clipboard register.
 
                                                    *ddu-kind-file-action-copy*
 copy
@@ -192,7 +208,7 @@ undo
 
                                                    *ddu-kind-file-action-yank*
 yank
-		Yank the file path.
+		Yank the file path to unnamed register.
 
 ==============================================================================
 PREVIEW PARAMS                                  *ddu-kind-file-preview-params*

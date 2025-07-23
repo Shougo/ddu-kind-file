@@ -17,16 +17,16 @@ import {
   treePath2Filename,
 } from "jsr:@shougo/ddu-vim@~10.3.0/utils";
 
-import type { Denops } from "jsr:@denops/std@~7.5.0";
-import * as fn from "jsr:@denops/std@~7.5.0/function";
-import * as vars from "jsr:@denops/std@~7.5.0/variable";
+import type { Denops } from "jsr:@denops/std@~7.6.0";
+import * as fn from "jsr:@denops/std@~7.6.0/function";
+import * as vars from "jsr:@denops/std@~7.6.0/variable";
 
-import { basename } from "jsr:@std/path@~1.0.2/basename";
-import { dirname } from "jsr:@std/path@~1.0.2/dirname";
-import { isAbsolute } from "jsr:@std/path@~1.0.2/is-absolute";
-import { join } from "jsr:@std/path@~1.0.2/join";
-import { normalize } from "jsr:@std/path@~1.0.2/normalize";
-import { relative } from "jsr:@std/path@~1.0.2/relative";
+import { basename } from "jsr:@std/path@~1.1.0/basename";
+import { dirname } from "jsr:@std/path@~1.1.0/dirname";
+import { isAbsolute } from "jsr:@std/path@~1.1.0/is-absolute";
+import { join } from "jsr:@std/path@~1.1.0/join";
+import { normalize } from "jsr:@std/path@~1.1.0/normalize";
+import { relative } from "jsr:@std/path@~1.1.0/relative";
 import { copy } from "jsr:@std/fs@~1.0.0/copy";
 import { ensureDir } from "jsr:@std/fs@~1.0.0/ensure-dir";
 import { ensureFile } from "jsr:@std/fs@~1.0.0/ensure-file";
@@ -73,6 +73,115 @@ export const FileActions: Actions<Params> = {
       }
 
       return ActionFlags.None;
+    },
+  },
+  clipCopy: {
+    description: "Copy files from clipboard register.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        clipboard: Clipboard;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      const cwd = await getTargetDirectory(
+        args.denops,
+        treePath2Filename(args.sourceOptions.path),
+        args.items,
+      );
+
+      const clipboard = await fn.getreg(args.denops, "+") as string;
+      let defaultConfirm = "";
+      let searchPath = "";
+      for (const path of clipboard.split("\n")) {
+        const ret = await checkOverwrite(
+          args.denops,
+          path,
+          join(cwd, basename(path)),
+          defaultConfirm,
+        );
+        const dest = ret.dest;
+        defaultConfirm = ret.defaultConfirm;
+        if (dest === "") {
+          continue;
+        }
+
+        await safeAction("copy", path, dest);
+
+        searchPath = dest;
+      }
+
+      if (searchPath === "") {
+        return ActionFlags.Persist;
+      } else {
+        return {
+          flags: ActionFlags.RefreshItems,
+          searchPath,
+        };
+      }
+    },
+  },
+  clipMove: {
+    description: "Move files from clipboard register.",
+    callback: async (
+      args: {
+        denops: Denops;
+        items: DduItem[];
+        sourceOptions: SourceOptions;
+        clipboard: Clipboard;
+        actionHistory: ActionHistory;
+      },
+    ) => {
+      const cwd = await getTargetDirectory(
+        args.denops,
+        treePath2Filename(args.sourceOptions.path),
+        args.items,
+      );
+
+      const clipboard = await fn.getreg(args.denops, "+") as string;
+      let defaultConfirm = "";
+      let searchPath = "";
+      for (const path of clipboard.split("\n")) {
+        const ret = await checkOverwrite(
+          args.denops,
+          path,
+          join(cwd, basename(path)),
+          defaultConfirm,
+        );
+        const dest = ret.dest;
+        defaultConfirm = ret.defaultConfirm;
+        if (dest === "") {
+          continue;
+        }
+
+        await safeAction("move", path, dest);
+
+        searchPath = dest;
+      }
+
+      if (searchPath === "") {
+        return ActionFlags.Persist;
+      } else {
+        return {
+          flags: ActionFlags.RefreshItems,
+          searchPath,
+        };
+      }
+    },
+  },
+  clipYank: {
+    description: "Yank the file path to clipboard register.",
+    callback: async (args: { denops: Denops; items: DduItem[] }) => {
+      const paths = args.items.map((item) => {
+        const action = item?.action as ActionData;
+        return action.path ?? item.word;
+      });
+
+      await fn.setreg(args.denops, "+", paths.join("\n"), "v");
+
+      return ActionFlags.Persist;
     },
   },
   copy: {
