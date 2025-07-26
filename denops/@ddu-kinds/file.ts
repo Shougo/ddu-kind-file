@@ -64,12 +64,19 @@ export const FileActions: Actions<Params> = {
     callback: async (args: { denops: Denops; items: DduItem[] }) => {
       for (const item of args.items) {
         const dir = await getDirectory(item);
-        if (dir !== "") {
-          await args.denops.call(
-            "chdir",
-            dir,
+        if (dir === "") {
+          await printError(
+            args.denops,
+            `${dir} is not found.`,
           );
+
+          continue;
         }
+
+        await args.denops.call(
+          "chdir",
+          dir,
+        );
       }
 
       return ActionFlags.None;
