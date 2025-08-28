@@ -1,0 +1,20 @@
+{
+  "name": "@shougo/ddu-kind-file",
+  "exports": {
+    ".": "./main.ts"
+  },
+  "publish": {
+    "include": [
+      "**/*.ts"
+    ]
+  },
+  "imports": {
+    "@core/unknownutil": "jsr:@core/unknownutil@~4.3.0",
+    "@denops/std": "jsr:@denops/std@~8.0.0",
+    "@shougo/ddc-vim": "jsr:@shougo/ddc-vim@~10.0.0",
+    "@shougo/ddu-vim": "jsr:@shougo/ddu-vim@~11.0.0",
+    "@std/fs": "jsr:@std/fs@~1.0.0",
+    "@std/path": "jsr:@std/path@~1.1.0",
+    "@std/streams": "jsr:@std/streams@~1.0.0"
+  }
+}

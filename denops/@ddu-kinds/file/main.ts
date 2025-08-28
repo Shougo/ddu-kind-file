@@ -10,32 +10,32 @@ import {
   type PreviewContext,
   type Previewer,
   type SourceOptions,
-} from "jsr:@shougo/ddu-vim@~10.3.0/types";
-import { BaseKind } from "jsr:@shougo/ddu-vim@~10.3.0/kind";
+} from "@shougo/ddu-vim/types";
+import { BaseKind } from "@shougo/ddu-vim/kind";
 import {
   printError,
   treePath2Filename,
-} from "jsr:@shougo/ddu-vim@~10.3.0/utils";
+} from "@shougo/ddu-vim/utils";
 
-import type { Denops } from "jsr:@denops/std@~7.6.0";
-import * as fn from "jsr:@denops/std@~7.6.0/function";
-import * as vars from "jsr:@denops/std@~7.6.0/variable";
+import type { Denops } from "@denops/std";
+import * as fn from "@denops/std/function";
+import * as vars from "@denops/std/variable";
 
-import { basename } from "jsr:@std/path@~1.1.0/basename";
-import { dirname } from "jsr:@std/path@~1.1.0/dirname";
-import { isAbsolute } from "jsr:@std/path@~1.1.0/is-absolute";
-import { join } from "jsr:@std/path@~1.1.0/join";
-import { normalize } from "jsr:@std/path@~1.1.0/normalize";
-import { relative } from "jsr:@std/path@~1.1.0/relative";
-import { copy } from "jsr:@std/fs@~1.0.0/copy";
-import { ensureDir } from "jsr:@std/fs@~1.0.0/ensure-dir";
-import { ensureFile } from "jsr:@std/fs@~1.0.0/ensure-file";
-import { move } from "jsr:@std/fs@~1.0.0/move";
-import { ByteSliceStream } from "jsr:@std/streams@~1.0.0/byte-slice-stream";
-import { toArrayBuffer } from "jsr:@std/streams@~1.0.0/to-array-buffer";
-import { TextLineStream } from "jsr:@std/streams@~1.0.0/text-line-stream";
-import { ensure as unknownEnsure } from "jsr:@core/unknownutil@~4.3.0/ensure";
-import { is } from "jsr:@core/unknownutil@~4.3.0/is";
+import { basename } from "@std/path/basename";
+import { dirname } from "@std/path/dirname";
+import { isAbsolute } from "@std/path/is-absolute";
+import { join } from "@std/path/join";
+import { normalize } from "@std/path/normalize";
+import { relative } from "@std/path/relative";
+import { copy } from "@std/fs/copy";
+import { ensureDir } from "@std/fs/ensure-dir";
+import { ensureFile } from "@std/fs/ensure-file";
+import { move } from "@std/fs/move";
+import { ByteSliceStream } from "@std/streams/byte-slice-stream";
+import { toArrayBuffer } from "@std/streams/to-array-buffer";
+import { TextLineStream } from "@std/streams/text-line-stream";
+import { ensure as unknownEnsure } from "@core/unknownutil/ensure";
+import { is } from "@core/unknownutil/is";
 
 export type ActionData = {
   bufNr?: number;
