@@ -128,9 +128,9 @@ function! ddu#kind#file#buffer_delete(bufnr) abort
     return
   endif
 
-  let winid = a:bufnr->win_findbuf()->get(0, -1)
+  const winid = a:bufnr->win_findbuf()->get(0, -1)
   if winid > 0
-    let winid_save = win_getid()
+    const winid_save = win_getid()
     call win_gotoid(winid)
 
     noautocmd silent enew
