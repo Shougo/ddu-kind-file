@@ -100,17 +100,13 @@ export const FileActions: Actions<Params> = {
       );
 
       const clipboard = await fn.getreg(args.denops, "+") as string;
-      let defaultConfirm = "";
       let searchPath = "";
       for (const path of clipboard.split("\n")) {
-        const ret = await checkOverwrite(
+        const dest = await checkOverwrite(
           args.denops,
           path,
           join(cwd, basename(path)),
-          defaultConfirm,
         );
-        const dest = ret.dest;
-        defaultConfirm = ret.defaultConfirm;
         if (dest === "") {
           continue;
         }
@@ -148,17 +144,13 @@ export const FileActions: Actions<Params> = {
       );
 
       const clipboard = await fn.getreg(args.denops, "+") as string;
-      let defaultConfirm = "";
       let searchPath = "";
       for (const path of clipboard.split("\n")) {
-        const ret = await checkOverwrite(
+        const dest = await checkOverwrite(
           args.denops,
           path,
           join(cwd, basename(path)),
-          defaultConfirm,
         );
-        const dest = ret.dest;
-        defaultConfirm = ret.defaultConfirm;
         if (dest === "") {
           continue;
         }
@@ -707,7 +699,6 @@ export const FileActions: Actions<Params> = {
       );
 
       let searchPath = "";
-      let defaultConfirm = "";
       args.actionHistory.actions = [];
       switch (args.clipboard.action) {
         case "copy":
@@ -717,14 +708,11 @@ export const FileActions: Actions<Params> = {
             const action = item?.action as ActionData;
             const path = action.path ?? item.word;
 
-            const ret = await checkOverwrite(
+            const dest = await checkOverwrite(
               args.denops,
               path,
               join(cwd, basename(path)),
-              defaultConfirm,
             );
-            const dest = ret.dest;
-            defaultConfirm = ret.defaultConfirm;
             if (dest === "") {
               continue;
             }
@@ -1376,44 +1364,47 @@ const checkOverwrite = async (
   denops: Denops,
   src: string,
   dest: string,
-  defaultConfirm: string,
-): Promise<{ dest: string; defaultConfirm: string }> => {
+): Promise<string> => {
   const sStat = await safeStat(src);
   const dStat = await safeStat(dest);
 
   if (!sStat) {
-    return { dest: "", defaultConfirm: "" };
+    return "";
   }
   if (!dStat) {
-    return { dest, defaultConfirm: "" };
+    return dest;
   }
 
   const message = ` src: ${src} ${sStat.size} bytes\n` +
     `      ${sStat.mtime?.toISOString()}\n` +
     `dest: ${dest} ${dStat.size} bytes\n` +
     `      ${dStat.mtime?.toISOString()}\n` +
-    `${dest} already exists.  Overwrite? (Upper case is all)\n` +
-    "f[orce]/t[ime]/u[nderbar]/n[o]/r[ename] : ";
+    `${dest} already exists.  Overwrite?`;
 
-  // NOTE: Uppercase defaultConfirm skips user input
-  const confirm =
-    (defaultConfirm !== "" && defaultConfirm.toLowerCase() !== defaultConfirm)
-      ? defaultConfirm
-      : await denops.call(
-        "ddu#kind#file#check_overwrite_method",
-        message,
-        "no",
-      ) as string;
+  const confirm = await denops.call(
+    "ddu#kind#file#confirm",
+    message,
+    "&Force\n&Time\n&Underbar\n&No\n&Rename",
+    4,
+  ) as number;
 
   let ret = "";
 
-  switch (confirm.toLowerCase()) {
-    case "f":
+  switch (confirm) {
+    case 1:
       ret = dest;
       break;
-    case "n":
+    case 2:
+      if (dStat.mtime && sStat.mtime && dStat.mtime < sStat.mtime) {
+        ret = src;
+      }
       break;
-    case "r":
+    case 3:
+      ret = dest + "_";
+      break;
+    case 4:
+      break;
+    case 5:
       ret = await denops.call(
         "ddu#kind#file#cwd_input",
         "",
@@ -1425,17 +1416,9 @@ const checkOverwrite = async (
         ret = "";
       }
       break;
-    case "t":
-      if (dStat.mtime && sStat.mtime && dStat.mtime < sStat.mtime) {
-        ret = src;
-      }
-      break;
-    case "u":
-      ret = dest + "_";
-      break;
   }
 
-  return { dest: ret, defaultConfirm: confirm };
+  return ret;
 };
 
 const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {

@@ -73,29 +73,6 @@ function! ddu#kind#file#confirm(msg, choices, default) abort
   return a:default
 endfunction
 
-function! ddu#kind#file#getchar(default) abort
-  try
-    return getchar()->nr2char()
-  catch
-    " ignore the errors
-  endtry
-
-  return a:default
-endfunction
-
-function! ddu#kind#file#check_overwrite_method(msg, default) abort
-  let method = ''
-  while method !~? '^[fnrtu]$'
-    " Retry.
-    echo a:msg
-    let method = ddu#kind#file#getchar(a:default)
-  endwhile
-
-  redraw
-
-  return method
-endfunction
-
 function! ddu#kind#file#print(string, ...) abort
   let name = a:0 ? a:1 : 'ddu-kind-file'
   echomsg printf('[%s] %s', name,
