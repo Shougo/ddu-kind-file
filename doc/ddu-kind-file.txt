@@ -65,10 +65,12 @@ col		(number)
 		location-list entries.
 
 text		(string)
-		Text for quickfix/location-list.  If omitted, item.word is used.
+		Text for quickfix/location-list.  If omitted, item.word is
+		used.
 
 isDirectory	(boolean)
-		Directory hint.  If omitted, the kind checks the path by stat().
+		Directory hint.  If omitted, the kind checks the path by
+		stat().
 
 isLink		(boolean)
 		Reserved for future use.  It is not used by this kind now.
