@@ -8,6 +8,7 @@ CONTENTS                                              *ddu-kind-file-contents*
 Introduction		|ddu-kind-file-introduction|
 Install			|ddu-kind-file-install|
 Examples		|ddu-kind-file-examples|
+Action data		|ddu-kind-file-action-data|
 Actions			|ddu-kind-file-actions|
 Preview params		|ddu-kind-file-preview-params|
 Params			|ddu-kind-file-params|
@@ -40,6 +41,37 @@ EXAMPLES                                              *ddu-kind-file-examples*
 	    \   }
 	    \ })
 <
+
+==============================================================================
+ACTION DATA                                        *ddu-kind-file-action-data*
+
+This kind expects item.action to be a dictionary with the following fields.
+All fields are optional.
+For the TypeScript type definition, see:
+https://jsr.io/@shougo/ddu-kind-file/doc/~/ActionData
+
+path		(string)
+		Path of the item.  If omitted, item.word is used as a path.
+
+bufNr		(number)
+		Buffer number.  Used to open or preview a buffer directly.
+
+lineNr		(number)
+		Line number.  Used to move the cursor and to set quickfix/
+		location-list entries.
+
+col		(number)
+		Column number.  Used to move the cursor and to set quickfix/
+		location-list entries.
+
+text		(string)
+		Text for quickfix/location-list.  If omitted, item.word is used.
+
+isDirectory	(boolean)
+		Directory hint.  If omitted, the kind checks the path by stat().
+
+isLink		(boolean)
+		Reserved for future use.  It is not used by this kind now.
 
 ==============================================================================
 ACTIONS                                                *ddu-kind-file-actions*

@@ -37,13 +37,24 @@ import { TextLineStream } from "@std/streams/text-line-stream";
 import { ensure as unknownEnsure } from "@core/unknownutil/ensure";
 import { is } from "@core/unknownutil/is";
 
+/**
+ * Action data for file kind items.
+ * All fields are optional; when path is omitted, item.word is used as a path.
+ */
 export type ActionData = {
+  /** Buffer number to open/preview directly. */
   bufNr?: number;
+  /** Column number for cursor/quickfix. */
   col?: number;
+  /** Directory hint; if omitted, stat() is used. */
   isDirectory?: boolean;
+  /** Reserved for future use. */
   isLink?: boolean;
+  /** Line number for cursor/preview/quickfix. */
   lineNr?: number;
+  /** Path of the item. */
   path?: string;
+  /** Text for quickfix/location-list; defaults to item.word. */
   text?: string;
 };
 
