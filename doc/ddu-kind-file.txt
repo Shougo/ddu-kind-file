@@ -112,6 +112,9 @@ delete
 		NOTE: It removes the deleted buffer.
 		NOTE: It cannot support |ddu-kind-file-action-undo| action.
 
+edit                                                    *ddu-kind-action-edit*
+		Same with |ddu-kind-action-rename|.
+
                                                 *ddu-kind-file-action-execute*
 execute
 		Execute the file.

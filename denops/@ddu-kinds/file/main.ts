@@ -1,6 +1,7 @@
 import {
   ActionFlags,
   type ActionHistory,
+  type ActionResult,
   type Actions,
   type BaseParams,
   type Clipboard,
@@ -12,10 +13,7 @@ import {
   type SourceOptions,
 } from "@shougo/ddu-vim/types";
 import { BaseKind } from "@shougo/ddu-vim/kind";
-import {
-  printError,
-  treePath2Filename,
-} from "@shougo/ddu-vim/utils";
+import { printError, treePath2Filename } from "@shougo/ddu-vim/utils";
 
 import type { Denops } from "@denops/std";
 import * as fn from "@denops/std/function";
@@ -264,6 +262,18 @@ export const FileActions: Actions<Params> = {
         flags: ActionFlags.RefreshItems,
         searchPath,
       };
+    },
+  },
+  edit: {
+    description: "Edit the file name.",
+    callback: async (args: {
+      denops: Denops;
+      options: DduOptions;
+      items: DduItem[];
+      sourceOptions: SourceOptions;
+      actionHistory: ActionHistory;
+    }) => {
+      return await renameFile(args);
     },
   },
   execute: {
@@ -821,65 +831,7 @@ export const FileActions: Actions<Params> = {
       sourceOptions: SourceOptions;
       actionHistory: ActionHistory;
     }) => {
-      if (args.items.length > 1) {
-        // Use exrename instead
-        await args.denops.call(
-          "ddu#kind#file#exrename#create_buffer",
-          args.items.map((item) => {
-            return {
-              action__path: (item?.action as ActionData).path ?? item.word,
-            };
-          }),
-          {
-            name: args.options.name,
-          },
-        );
-
-        return ActionFlags.Persist;
-      }
-
-      let cwd = args.sourceOptions.path;
-      if (cwd === "") {
-        cwd = await fn.getcwd(args.denops) as string;
-      }
-
-      let newPath = "";
-      args.actionHistory.actions = [];
-      for (const item of args.items) {
-        const action = item?.action as ActionData;
-        const path = action.path ?? item.word;
-
-        newPath = await args.denops.call(
-          "ddu#kind#file#cwd_input",
-          cwd,
-          `Please input a new name: ${path} -> `,
-          path,
-          (await isDirectory(path)) ? "dir" : "file",
-        ) as string;
-
-        if (newPath === "" || path === newPath) {
-          continue;
-        }
-
-        await safeAction("rename", path, newPath);
-
-        await args.denops.call(
-          "ddu#kind#file#buffer_rename",
-          await fn.bufnr(args.denops, path),
-          newPath,
-        );
-
-        args.actionHistory.actions.push({
-          name: "rename",
-          item,
-          dest: newPath,
-        });
-      }
-
-      return {
-        flags: ActionFlags.RefreshItems,
-        searchPath: newPath,
-      };
+      return await renameFile(args);
     },
   },
   trash: {
@@ -1075,6 +1027,79 @@ export const FileActions: Actions<Params> = {
     },
   },
 };
+
+async function renameFile(args: {
+  denops: Denops;
+  options: DduOptions;
+  items: DduItem[];
+  sourceOptions: SourceOptions;
+  actionHistory: ActionHistory;
+}): Promise<ActionFlags | ActionResult> {
+  if (args.items.length > 1) {
+    // Use exrename instead
+    await args.denops.call(
+      "ddu#kind#file#exrename#create_buffer",
+      args.items.map((item) => {
+        return {
+          action__path: (item?.action as ActionData).path ?? item.word,
+        };
+      }),
+      {
+        name: args.options.name,
+      },
+    );
+
+    return ActionFlags.Persist;
+  }
+
+  let cwd = args.sourceOptions.path;
+  if (cwd === "") {
+    cwd = await fn.getcwd(args.denops) as string;
+  }
+
+  let newPath = "";
+  args.actionHistory.actions = [];
+  for (const item of args.items) {
+    const action = item?.action as ActionData;
+    const path = action.path ?? item.word;
+
+    newPath = await args.denops.call(
+      "ddu#kind#file#cwd_input",
+      cwd,
+      `Please input a new name: ${path} -> `,
+      path,
+      (await isDirectory(path)) ? "dir" : "file",
+    ) as string;
+
+    if (newPath === "" || path === newPath) {
+      newPath = "";
+      continue;
+    }
+
+    await safeAction("rename", path, newPath);
+
+    await args.denops.call(
+      "ddu#kind#file#buffer_rename",
+      await fn.bufnr(args.denops, path),
+      newPath,
+    );
+
+    args.actionHistory.actions.push({
+      name: "rename",
+      item,
+      dest: newPath,
+    });
+  }
+
+  if (newPath === "") {
+    return ActionFlags.Persist;
+  }
+
+  return {
+    flags: ActionFlags.RefreshItems,
+    searchPath: newPath,
+  };
+}
 
 type Params = {
   trashCommand: string[];
