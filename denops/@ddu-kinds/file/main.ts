@@ -1063,6 +1063,17 @@ async function renameFile(args: {
     const action = item?.action as ActionData;
     const path = action.path ?? item.word;
 
+    const bufNr = await fn.bufnr(args.denops, path);
+
+    if (await fn.getbufvar(args.denops, bufNr, "&modified")) {
+      // Skip modified buffer
+      await printError(
+        args.denops,
+        `${path} is modified.`,
+      );
+      continue;
+    }
+
     newPath = await args.denops.call(
       "ddu#kind#file#cwd_input",
       cwd,
@@ -1080,7 +1091,7 @@ async function renameFile(args: {
 
     await args.denops.call(
       "ddu#kind#file#buffer_rename",
-      await fn.bufnr(args.denops, path),
+      bufNr,
       newPath,
     );
 
