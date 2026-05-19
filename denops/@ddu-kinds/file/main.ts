@@ -770,12 +770,25 @@ export const FileActions: Actions<Params> = {
                   return ActionFlags.Persist;
               }
             } else {
+              const bufNr = await fn.bufnr(args.denops, path);
+              if (
+                args.clipboard.action === "move" &&
+                await fn.getbufvar(args.denops, bufNr, "&modified")
+              ) {
+                // Skip modified buffer
+                await printError(
+                  args.denops,
+                  `${path} is modified.`,
+                );
+                continue;
+              }
+
               await safeAction(args.clipboard.action, path, dest);
 
               if (args.clipboard.action === "move") {
                 await args.denops.call(
                   "ddu#kind#file#buffer_rename",
-                  await fn.bufnr(args.denops, path),
+                  bufNr,
                   dest,
                 );
               }
