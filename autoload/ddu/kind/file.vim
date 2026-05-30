@@ -47,7 +47,7 @@ function! ddu#kind#file#open(filename, method) abort
 endfunction
 
 function! ddu#kind#file#cwd_input(cwd, prompt, text, completion) abort
-  redraw
+  echo '' | redraw
 
   let prev = getcwd()
   try
