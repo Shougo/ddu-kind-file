@@ -18,6 +18,7 @@ import { printError, treePath2Filename } from "@shougo/ddu-vim/utils";
 import type { Denops } from "@denops/std";
 import * as fn from "@denops/std/function";
 import * as vars from "@denops/std/variable";
+import * as op from "@denops/std/option";
 
 import { basename } from "@std/path/basename";
 import { dirname } from "@std/path/dirname";
@@ -1479,7 +1480,8 @@ const checkOverwrite = async (
 const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
   const action = item?.action as ActionData;
 
-  if (action.path === null) {
+  const modifiable = await op.modifiable.getLocal(denops);
+  if (action.path === null || !modifiable) {
     return;
   }
 
