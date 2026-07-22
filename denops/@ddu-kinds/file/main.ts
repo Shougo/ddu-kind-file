@@ -899,15 +899,13 @@ export const FileActions: Actions<Params> = {
           },
         ).spawn();
 
-        proc.status.then(async (s) => {
-          if (s.success) {
-            await args.denops.call(
-              "ddu#kind#file#buffer_delete",
-              await fn.bufnr(args.denops, getPath(item)),
-            );
-            return;
-          }
-
+        const s = await proc.status;
+        if (s.success) {
+          await args.denops.call(
+            "ddu#kind#file#buffer_delete",
+            await fn.bufnr(args.denops, getPath(item)),
+          );
+        } else {
           await printError(
             args.denops,
             `Run ${cmd} is failed with exit code ${s.code}.`,
@@ -920,7 +918,7 @@ export const FileActions: Actions<Params> = {
             args.denops,
             err.join("\n"),
           );
-        });
+        }
 
         args.actionHistory.actions.push({
           name: "trash",
@@ -1481,7 +1479,7 @@ const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
   const action = item?.action as ActionData;
 
   const modifiable = await op.modifiable.getLocal(denops);
-  if (action.path === null || !modifiable) {
+  if (action.path === null || action.path === undefined || !modifiable) {
     return;
   }
 
@@ -1501,7 +1499,7 @@ const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
 const feedkeys = async (denops: Denops, item: DduItem) => {
   const action = item?.action as ActionData;
 
-  if (action.path === null) {
+  if (action.path === null || action.path === undefined) {
     return;
   }
 
