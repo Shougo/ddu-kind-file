@@ -153,7 +153,8 @@ insert
 
                                                    *ddu-kind-file-action-link*
 link
-		Create link the selected files to ddu clipboard.
+		Add the selected files to the ddu clipboard for creating
+		links. The links are created by |ddu-kind-file-action-paste|.
 
 		params:
 			{mode}:		create link mode.
@@ -162,7 +163,8 @@ link
 			"relative":	Create relative symbolic link from
 					destination parent.
 			"absolute":	Create absolute symbolic link.
-			default:	Create symbolic link.
+
+			default:	"absolute"
 
                                                 *ddu-kind-file-action-loclist*
 loclist
