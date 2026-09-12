@@ -112,8 +112,8 @@ delete
 		NOTE: It removes the deleted buffer.
 		NOTE: It cannot support |ddu-kind-file-action-undo| action.
 
-edit                                                    *ddu-kind-action-edit*
-		Same with |ddu-kind-action-rename|.
+edit                                               *ddu-kind-file-action-edit*
+		Same with |ddu-kind-file-action-rename|.
 
                                                 *ddu-kind-file-action-execute*
 execute
@@ -223,7 +223,7 @@ paste                                             *ddu-kind-file-action-paste*
 quickfix
 		Set the |quickfix| list and open the |quickfix| window.
 
-rename                                                *ddu-kind-action-rename*
+rename                                           *ddu-kind-file-action-rename*
 		Rename the file/directory under cursor or from selected list.
 		NOTE: If you select multiple files, it will be buffer-rename
 		mode.
