@@ -1477,15 +1477,16 @@ const checkOverwrite = async (
 
 const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
   const action = item?.action as ActionData;
+  const path = action.path ?? item.word;
 
   const modifiable = await op.modifiable.getLocal(denops);
-  if (action.path === null || action.path === undefined || !modifiable) {
+  if (path === null || path === undefined || !modifiable) {
     return;
   }
 
   const oldReg = await fn.getreginfo(denops, '"');
 
-  await fn.setreg(denops, '"', action.path, "v");
+  await fn.setreg(denops, '"', path, "v");
   try {
     await denops.cmd('normal! ""' + pasteKey);
   } finally {
@@ -1498,13 +1499,14 @@ const paste = async (denops: Denops, item: DduItem, pasteKey: string) => {
 
 const feedkeys = async (denops: Denops, item: DduItem) => {
   const action = item?.action as ActionData;
+  const path = action.path ?? item.word;
 
-  if (action.path === null || action.path === undefined) {
+  if (path === null || path === undefined) {
     return;
   }
 
   // Use feedkeys() instead
-  await fn.feedkeys(denops, action.path, "n");
+  await fn.feedkeys(denops, path, "n");
 };
 
 const safeAction = async (
