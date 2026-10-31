@@ -13,8 +13,8 @@
     "@denops/std": "jsr:@denops/std@~8.2.0",
     "@shougo/ddc-vim": "jsr:@shougo/ddc-vim@~10.3.0",
     "@shougo/ddu-vim": "jsr:@shougo/ddu-vim@~11.3.0",
-    "@std/fs": "jsr:@std/fs@~1.0.0",
-    "@std/path": "jsr:@std/path@~1.1.0",
-    "@std/streams": "jsr:@std/streams@~1.1.1"
+    "@std/fs": "jsr:@std/fs@~1.0.24",
+    "@std/path": "jsr:@std/path@~1.1.6",
+    "@std/streams": "jsr:@std/streams@~1.2.0"
   }
 }
